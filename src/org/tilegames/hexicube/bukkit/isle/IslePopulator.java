@@ -11,9 +11,7 @@ import net.minecraft.server.v1_6_R2.ChunkSection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.CreatureSpawner;
@@ -45,6 +43,65 @@ public class IslePopulator extends BlockPopulator
 				chunkCoordIntPairQueue.add(ccip);
 			}
 		}
+	}
+	
+	private int[][] genIslandData(int size, Random rand)
+	{
+		int tileSize = 10;
+		int[][] tileData = new int[size][size];
+		int subsize = size*tileSize;
+		int radiusSteps = Math.min(subsize, subsize)/15;
+		byte[][] data = new byte[subsize][subsize];
+		ArrayList<int[]> steps = new ArrayList<int[]>();
+		steps.add(new int[]{(int)(subsize*0.5), (int)(subsize*0.5), radiusSteps*5});
+		while(steps.size() > 0)
+		{
+			int[] step = steps.remove(0);
+			if(step[2] > radiusSteps)
+			{
+				for(int x = 0; x < step[2]; x++)
+				{
+					for(int y = 0; y < step[2]; y++)
+					{
+						double distSqrd = (step[2]*0.5-x)*(step[2]*0.5-x)+(step[2]*0.5-y)*(step[2]*0.5-y);
+						if(distSqrd < step[2]*step[2]*0.25)
+						{
+							double strength = (1.0-distSqrd/(step[2]*step[2])*4)*((step[2]==radiusSteps*5)?0.1:0.065);
+							int xPos = (int)(x+step[0]-step[2]*0.5), yPos = (int)(y+step[1]-step[2]*0.5);
+							int val = data[xPos][yPos];
+							if(val < 0) val += 256;
+							val += strength*255;
+							if(val > 255) val = 255;
+							data[xPos][yPos] = (byte)val;
+						}
+					}
+				}
+				for(int a = 0; a < 6; a++)
+				{
+					double angle = (double)rand.nextInt(360)/180*Math.PI;
+					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-radiusSteps});
+				}
+			}
+		}
+		for(int x = 0; x < size; x++)
+		{
+			for(int y = 0; y < size; y++)
+			{
+				float strength = 0;
+				for(int x2 = 0; x2 < tileSize; x2++)
+				{
+					for(int y2 = 0; y2 < tileSize; y2++)
+					{
+						int val = data[x*tileSize+x2][y*tileSize+y2];
+						if(val < 0) val += 256;
+						strength += (float)val/(float)(tileSize*tileSize);
+					}
+				}
+				int value = (int)strength;
+				tileData[x][y] = value;
+			}
+		}
+		return tileData;
 	}
 	
 	private ChunkSection getChunkSection(World world, int x, int y, int z)
@@ -107,6 +164,10 @@ public class IslePopulator extends BlockPopulator
 	private void setBlock(World world, int x, int y, int z, int id)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
+		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.MOB_SPAWNER.getId())
+		{
+			world.getBlockAt(x, y, z).setTypeId(0);
+		}
 		chunksection.setTypeId(x & 15, y & 15, z & 15, id);
 		chunksection.setData(x & 15, y & 15, z & 15, 0);
 	}
@@ -180,7 +241,7 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
-	private void setBlockIfAcceptsOre(World world, int x, int y, int z, int id)
+	private boolean setBlockIfAcceptsOre(World world, int x, int y, int z, int id)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
 		int oldid = chunksection.getTypeId(x & 15, y & 15, z & 15);
@@ -190,7 +251,9 @@ public class IslePopulator extends BlockPopulator
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, id);
 			chunksection.setData(x & 15, y & 15, z & 15, 0);
+			return true;
 		}
+		return false;
 	}
 	
 	private void placeBasicTree(World world, int x, int y, int z, Random rand)
@@ -440,70 +503,91 @@ public class IslePopulator extends BlockPopulator
 		setBlockIfAlreadyAir(world, x, y+height+2, z, Material.SNOW.getId());
 	}
 	
+	private void placeMushroomTree(World world, int x, int y, int z, Random rand)
+	{
+		boolean brownTree = rand.nextBoolean();
+		if(brownTree)
+		{
+			int height = rand.nextInt(3)+5;
+			for(int y2 = 0; y2 < height; y2++)
+			{
+				setBlockWithData(world, x, y+y2, z, Material.HUGE_MUSHROOM_1.getId(), 10);
+			}
+			for(int x2 = -2; x2 <= 2; x2++)
+			{
+				for(int z2 = -2; z2 <= 2; z2++)
+				{
+					setBlockWithData(world, x+x2, y+height, z+z2, Material.HUGE_MUSHROOM_1.getId(), 5);
+				}
+			}
+			for(int x2 = -1; x2 <= 1; x2++)
+			{
+				setBlockWithData(world, x+x2, y+height, z-3, Material.HUGE_MUSHROOM_1.getId(), 2);
+				setBlockWithData(world, x+x2, y+height, z+3, Material.HUGE_MUSHROOM_1.getId(), 8);
+			}
+			for(int z2 = -1; z2 <= 1; z2++)
+			{
+				setBlockWithData(world, x-3, y+height, z+z2, Material.HUGE_MUSHROOM_1.getId(), 4);
+				setBlockWithData(world, x+3, y+height, z+z2, Material.HUGE_MUSHROOM_1.getId(), 6);
+			}
+			setBlockWithData(world, x-3, y+height, z-2, Material.HUGE_MUSHROOM_1.getId(), 1);
+			setBlockWithData(world, x-2, y+height, z-3, Material.HUGE_MUSHROOM_1.getId(), 1);
+			setBlockWithData(world, x+3, y+height, z-2, Material.HUGE_MUSHROOM_1.getId(), 3);
+			setBlockWithData(world, x+2, y+height, z-3, Material.HUGE_MUSHROOM_1.getId(), 3);
+			setBlockWithData(world, x-3, y+height, z+2, Material.HUGE_MUSHROOM_1.getId(), 7);
+			setBlockWithData(world, x-2, y+height, z+3, Material.HUGE_MUSHROOM_1.getId(), 7);
+			setBlockWithData(world, x+3, y+height, z+2, Material.HUGE_MUSHROOM_1.getId(), 9);
+			setBlockWithData(world, x+2, y+height, z+3, Material.HUGE_MUSHROOM_1.getId(), 9);
+		}
+		else
+		{
+			int height = rand.nextInt(3)+4;
+			for(int y2 = 0; y2 < height; y2++)
+			{
+				setBlockWithData(world, x, y+y2, z, Material.HUGE_MUSHROOM_2.getId(), 10);
+			}
+			setBlockWithData(world, x, y+height, z, Material.HUGE_MUSHROOM_2.getId(), 5);
+			
+			setBlockWithData(world, x, y+height, z-1, Material.HUGE_MUSHROOM_2.getId(), 2);
+			setBlockWithData(world, x-1, y+height, z, Material.HUGE_MUSHROOM_2.getId(), 4);
+			setBlockWithData(world, x+1, y+height, z, Material.HUGE_MUSHROOM_2.getId(), 6);
+			setBlockWithData(world, x, y+height, z+1, Material.HUGE_MUSHROOM_2.getId(), 8);
+			
+			for(int y2 = height-3; y2 <= height-1; y2++)
+			{
+				setBlockWithData(world, x, y+y2, z-2, Material.HUGE_MUSHROOM_2.getId(), 2);
+				setBlockWithData(world, x-2, y+y2, z, Material.HUGE_MUSHROOM_2.getId(), 4);
+				setBlockWithData(world, x+2, y+y2, z, Material.HUGE_MUSHROOM_2.getId(), 6);
+				setBlockWithData(world, x, y+y2, z+2, Material.HUGE_MUSHROOM_2.getId(), 8);
+				
+				setBlockWithData(world, x-2, y+y2, z-1, Material.HUGE_MUSHROOM_2.getId(), 1);
+				setBlockWithData(world, x-1, y+y2, z-2, Material.HUGE_MUSHROOM_2.getId(), 1);
+				setBlockWithData(world, x+2, y+y2, z-1, Material.HUGE_MUSHROOM_2.getId(), 3);
+				setBlockWithData(world, x+1, y+y2, z-2, Material.HUGE_MUSHROOM_2.getId(), 3);
+				setBlockWithData(world, x-2, y+y2, z+1, Material.HUGE_MUSHROOM_2.getId(), 7);
+				setBlockWithData(world, x-1, y+y2, z+2, Material.HUGE_MUSHROOM_2.getId(), 7);
+				setBlockWithData(world, x+2, y+y2, z+1, Material.HUGE_MUSHROOM_2.getId(), 9);
+				setBlockWithData(world, x+1, y+y2, z+2, Material.HUGE_MUSHROOM_2.getId(), 9);
+			}
+			
+			setBlockWithData(world, x-1, y+height, z-1, Material.HUGE_MUSHROOM_2.getId(), 1);
+			setBlockWithData(world, x+1, y+height, z+1, Material.HUGE_MUSHROOM_2.getId(), 9);
+			setBlockWithData(world, x+1, y+height, z-1, Material.HUGE_MUSHROOM_2.getId(), 3);
+			setBlockWithData(world, x-1, y+height, z+1, Material.HUGE_MUSHROOM_2.getId(), 7);
+		}
+	}
+	
 	private void placePool(World world, int poolX, int poolY, int poolZ, Random rand)
 	{
 		boolean lava = rand.nextInt(10) < 3;
 		int size = rand.nextInt(21)+10;
-		int w = size, h = size, tileSize = 10;
-		int[][] tileData = new int[w][h];
-		int width = w*tileSize, height = h*tileSize;
-		int radiusSteps = Math.min(width, height)/15;
-		byte[][] data = new byte[width][height];
-		ArrayList<int[]> steps = new ArrayList<int[]>();
-		steps.add(new int[]{(int)(width*0.5), (int)(height*0.5), radiusSteps*5});
-		while(steps.size() > 0)
-		{
-			int[] step = steps.remove(0);
-			if(step[2] > radiusSteps)
-			{
-				for(int x = 0; x < step[2]; x++)
-				{
-					for(int y = 0; y < step[2]; y++)
-					{
-						double distSqrd = (step[2]*0.5-x)*(step[2]*0.5-x)+(step[2]*0.5-y)*(step[2]*0.5-y);
-						if(distSqrd < step[2]*step[2]*0.25)
-						{
-							double strength = (1.0-distSqrd/(step[2]*step[2])*4)*((step[2]==radiusSteps*5)?0.1:0.065);
-							int xPos = (int)(x+step[0]-step[2]*0.5), yPos = (int)(y+step[1]-step[2]*0.5);
-							int val = data[xPos][yPos];
-							if(val < 0) val += 256;
-							val += strength*255;
-							if(val > 255) val = 255;
-							data[xPos][yPos] = (byte)val;
-						}
-					}
-				}
-				for(int a = 0; a < 6; a++)
-				{
-					double angle = (double)rand.nextInt(360)/180*Math.PI;
-					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-radiusSteps});
-				}
-			}
-		}
-		for(int x = 0; x < w; x++)
-		{
-			for(int y = 0; y < h; y++)
-			{
-				float strength = 0;
-				for(int x2 = 0; x2 < tileSize; x2++)
-				{
-					for(int y2 = 0; y2 < tileSize; y2++)
-					{
-						int val = data[x*tileSize+x2][y*tileSize+y2];
-						if(val < 0) val += 256;
-						strength += (float)val/255/(float)(tileSize*tileSize);
-					}
-				}
-				int value = (int)(strength*255);
-				tileData[x][y] = value;
-			}
-		}
-		int startX = poolX - w/2;
+		int[][] tileData = genIslandData(size, rand);
+		int startX = poolX - size/2;
 		int startY = poolY;
-		int startZ = poolZ - h/2;
-		for(int x = 0; x < w; x++)
+		int startZ = poolZ - size/2;
+		for(int x = 0; x < size; x++)
 		{
-			for(int z = 0; z < h; z++)
+			for(int z = 0; z < size; z++)
 			{
 				if(tileData[x][z] > 10)
 				{
@@ -525,66 +609,13 @@ public class IslePopulator extends BlockPopulator
 	private void gravelBlob(World world, int poolX, int poolY, int poolZ, Random rand)
 	{
 		int size = rand.nextInt(11)+5;
-		int w = size, h = size, tileSize = 10;
-		int[][] tileData = new int[w][h];
-		int width = w*tileSize, height = h*tileSize;
-		int radiusSteps = Math.min(width, height)/15;
-		byte[][] data = new byte[width][height];
-		ArrayList<int[]> steps = new ArrayList<int[]>();
-		steps.add(new int[]{(int)(width*0.5), (int)(height*0.5), radiusSteps*5});
-		while(steps.size() > 0)
-		{
-			int[] step = steps.remove(0);
-			if(step[2] > radiusSteps)
-			{
-				for(int x = 0; x < step[2]; x++)
-				{
-					for(int y = 0; y < step[2]; y++)
-					{
-						double distSqrd = (step[2]*0.5-x)*(step[2]*0.5-x)+(step[2]*0.5-y)*(step[2]*0.5-y);
-						if(distSqrd < step[2]*step[2]*0.25)
-						{
-							double strength = (1.0-distSqrd/(step[2]*step[2])*4)*((step[2]==radiusSteps*5)?0.1:0.065);
-							int xPos = (int)(x+step[0]-step[2]*0.5), yPos = (int)(y+step[1]-step[2]*0.5);
-							int val = data[xPos][yPos];
-							if(val < 0) val += 256;
-							val += strength*255;
-							if(val > 255) val = 255;
-							data[xPos][yPos] = (byte)val;
-						}
-					}
-				}
-				for(int a = 0; a < 6; a++)
-				{
-					double angle = (double)rand.nextInt(360)/180*Math.PI;
-					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-radiusSteps});
-				}
-			}
-		}
-		for(int x = 0; x < w; x++)
-		{
-			for(int y = 0; y < h; y++)
-			{
-				float strength = 0;
-				for(int x2 = 0; x2 < tileSize; x2++)
-				{
-					for(int y2 = 0; y2 < tileSize; y2++)
-					{
-						int val = data[x*tileSize+x2][y*tileSize+y2];
-						if(val < 0) val += 256;
-						strength += (float)val/255/(float)(tileSize*tileSize);
-					}
-				}
-				int value = (int)(strength*255);
-				tileData[x][y] = value;
-			}
-		}
-		int startX = poolX - w/2;
+		int[][] tileData = genIslandData(size, rand);
+		int startX = poolX - size/2;
 		int startY = poolY;
-		int startZ = poolZ - h/2;
-		for(int x = 0; x < w; x++)
+		int startZ = poolZ - size/2;
+		for(int x = 0; x < size; x++)
 		{
-			for(int z = 0; z < h; z++)
+			for(int z = 0; z < size; z++)
 			{
 				if(tileData[x][z] > 10)
 				{
@@ -599,11 +630,32 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
+	private void generateVein(World world, int x, int y, int z, int id, int size, Random rand)
+	{
+		int placed = 0;
+		ArrayList<int[]> targets = new ArrayList<int[]>();
+		targets.add(new int[]{x,y,z});
+		while(targets.size() > 0 && placed < size)
+		{
+			int[] target = targets.remove(rand.nextInt(targets.size()));
+			if(setBlockIfAcceptsOre(world, target[0], target[1], target[2], id))
+			{
+				targets.add(new int[]{target[0]+1,target[1],target[2]});
+				targets.add(new int[]{target[0]-1,target[1],target[2]});
+				targets.add(new int[]{target[0],target[1]+1,target[2]});
+				targets.add(new int[]{target[0],target[1]-1,target[2]});
+				targets.add(new int[]{target[0],target[1],target[2]+1});
+				targets.add(new int[]{target[0],target[1],target[2]-1});
+				placed++;
+			}
+		}
+	}
+	
 	@Override
 	public void populate(World world, Random rand, Chunk chunk)
 	{
 		if((chunk.getX()%12 != 0 || chunk.getZ()%12 != 0) &&
-		   (chunk.getX()%12 != 6 || chunk.getZ()%12 != 6)) return;
+		   (Math.abs(chunk.getX())%12 != 6 || Math.abs(chunk.getZ())%12 != 6)) return;
 		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R2.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean gravel = false;
@@ -623,74 +675,21 @@ public class IslePopulator extends BlockPopulator
 		else if(randVal < 993) islandType = Biome.EXTREME_HILLS;
 		else islandType = Biome.MUSHROOM_ISLAND;
 		int size = rand.nextInt(221)+40;
-		int w = size, h = size, tileSize = 10;
 		float heightMult = rand.nextFloat()/2.0f+0.75f;
-		int[][] tileData = new int[w][h];
-		int width = w*tileSize, height = h*tileSize;
-		int radiusSteps = Math.min(width, height)/15;
-		byte[][] data = new byte[width][height];
-		ArrayList<int[]> steps = new ArrayList<int[]>();
-		steps.add(new int[]{(int)(width*0.5), (int)(height*0.5), radiusSteps*5});
-		while(steps.size() > 0)
+		int[][] tileData = genIslandData(size, rand);
+		int startX = chunk.getX()*16+8 - size/2;
+		int startY = 150+rand.nextInt(61);
+		int startZ = chunk.getZ()*16+8 - size/2;
+		for(int x = 0; x < size; x++)
 		{
-			int[] step = steps.remove(0);
-			if(step[2] > radiusSteps)
-			{
-				for(int x = 0; x < step[2]; x++)
-				{
-					for(int y = 0; y < step[2]; y++)
-					{
-						double distSqrd = (step[2]*0.5-x)*(step[2]*0.5-x)+(step[2]*0.5-y)*(step[2]*0.5-y);
-						if(distSqrd < step[2]*step[2]*0.25)
-						{
-							double strength = (1.0-distSqrd/(step[2]*step[2])*4)*((step[2]==radiusSteps*5)?0.1:0.065);
-							int xPos = (int)(x+step[0]-step[2]*0.5), yPos = (int)(y+step[1]-step[2]*0.5);
-							int val = data[xPos][yPos];
-							if(val < 0) val += 256;
-							val += strength*255;
-							if(val > 255) val = 255;
-							data[xPos][yPos] = (byte)val;
-						}
-					}
-				}
-				for(int a = 0; a < 6; a++)
-				{
-					double angle = (double)rand.nextInt(360)/180*Math.PI;
-					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-radiusSteps});
-				}
-			}
-		}
-		for(int x = 0; x < w; x++)
-		{
-			for(int y = 0; y < h; y++)
-			{
-				float strength = 0;
-				for(int x2 = 0; x2 < tileSize; x2++)
-				{
-					for(int y2 = 0; y2 < tileSize; y2++)
-					{
-						int val = data[x*tileSize+x2][y*tileSize+y2];
-						if(val < 0) val += 256;
-						strength += (float)val/255/(float)(tileSize*tileSize);
-					}
-				}
-				int value = (int)(strength*255);
-				tileData[x][y] = value;
-			}
-		}
-		int startX = chunk.getX()*16+8 - w/2;
-		int startY = 70+rand.nextInt(41);
-		int startZ = chunk.getZ()*16+8 - h/2;
-		for(int x = 0; x < w; x++)
-		{
-			for(int z = 0; z < h; z++)
+			for(int z = 0; z < size; z++)
 			{
 				if(tileData[x][z] > 10)
 				{
 					world.setBiome(startX+x, startZ+z, islandType);
-					//int upAmount = (int)(tileData[x][z]*width*heightMult/(flatIsland?120000:20000));
-					int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*width*heightMult/(flatIsland?120000:20000));
-					if(x == w/2 && z == h/2)
+					//int upAmount = (int)(tileData[x][z]*size*heightMult/(flatIsland?12000:2000));
+					int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
+					if(x == size/2 && z == size/2)
 					{
 						if(world.getSpawnLocation().getBlockY() < 80)
 						{
@@ -710,7 +709,7 @@ public class IslePopulator extends BlockPopulator
 						}
 					}
 					total /= 49;
-					int downAmount = (int) (total*width*heightMult/30000+1);
+					int downAmount = (int) (total*size*heightMult/3000+1);
 					int thickness = downAmount+upAmount+1;
 					for(int y = -downAmount; y <= upAmount; y++)
 					{
@@ -837,7 +836,8 @@ public class IslePopulator extends BlockPopulator
 							if(distFromTop == 0)
 							{
 								setBlock(world, blockX, blockY, blockZ, Material.MYCEL.getId());
-								if(rand.nextInt(250) == 51) world.generateTree(new Location(world, blockX, blockY+1, blockZ), rand.nextBoolean()?TreeType.RED_MUSHROOM:TreeType.BROWN_MUSHROOM); //TODO: replace
+								if(rand.nextInt(250) == 51) placeMushroomTree(world, blockX, blockY+1, blockZ, rand);
+								else if(rand.nextInt(40) == 12) setBlock(world, blockX, blockY+1, blockZ, rand.nextBoolean()?Material.RED_MUSHROOM.getId():Material.BROWN_MUSHROOM.getId());
 							}
 							else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
 							else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
@@ -848,71 +848,44 @@ public class IslePopulator extends BlockPopulator
 							@SuppressWarnings("unused")
 							int a = 0/0;
 						}
-						if((startX+x)%16 != 15 && (startZ+z)%16 != 15)
+						if(distFromTop > 4 && distFromBottom > 2)
 						{
-							if(distFromTop > 4 && distFromBottom > 2)
+							if(rand.nextFloat() < 0.001)
 							{
-								if(rand.nextFloat() < 0.01)
-								{
-									int veinSize = rand.nextInt(7)+4;
-									for(int a = 0; a < veinSize; a++)
-									{
-										setBlockIfAcceptsOre(world, blockX+rand.nextInt(2), blockY+rand.nextInt(2), blockZ+rand.nextInt(2), Material.COAL_ORE.getId());
-									}
-								}
-								if(rand.nextFloat() < 0.005)
-								{
-									int veinSize = rand.nextInt(9)+2;
-									for(int a = 0; a < veinSize; a++)
-									{
-										setBlockIfAcceptsOre(world, blockX+rand.nextInt(2), blockY+rand.nextInt(2), blockZ+rand.nextInt(2), Material.IRON_ORE.getId());
-									}
-								}
-								if(rand.nextFloat() < 0.001)
-								{
-									int veinSize = rand.nextInt(5)+4;
-									for(int a = 0; a < veinSize; a++)
-									{
-										setBlockIfAcceptsOre(world, blockX+rand.nextInt(2), blockY+rand.nextInt(2), blockZ+rand.nextInt(2), Material.GOLD_ORE.getId());
-									}
-								}
-								if(rand.nextFloat() < 0.0005)
-								{
-									int veinSize = rand.nextInt(9)+2;
-									for(int a = 0; a < veinSize; a++)
-									{
-										setBlockIfAcceptsOre(world, blockX+rand.nextInt(2), blockY+rand.nextInt(2), blockZ+rand.nextInt(2), Material.REDSTONE_ORE.getId());
-									}
-								}
-								if(rand.nextFloat() < 0.0001)
-								{
-									int veinSize = rand.nextInt(5)+1;
-									for(int a = 0; a < veinSize; a++)
-									{
-										setBlockIfAcceptsOre(world, blockX+rand.nextInt(2), blockY+rand.nextInt(2), blockZ+rand.nextInt(2), Material.DIAMOND_ORE.getId());
-									}
-								}
-								if(rand.nextDouble() < 0.000025)
-								{
-									int veinSize = rand.nextInt(5)+1;
-									for(int a = 0; a < veinSize; a++)
-									{
-										setBlockIfAcceptsOre(world, blockX+rand.nextInt(2), blockY+rand.nextInt(2), blockZ+rand.nextInt(2), Material.EMERALD_ORE.getId());
-									}
-								}
-								if(distFromTop > 12)
-								{
-									if(rand.nextFloat() < 0.00004)
-									{
-										placePool(world, blockX, blockY, blockZ, rand);
-									}
-									if(rand.nextFloat() < 0.0004)
-									{
-										gravelBlob(world, blockX, blockY, blockZ, rand);
-									}
-								}
-								//TODO: villages n shit
+								generateVein(world, blockX, blockY, blockZ, Material.COAL_ORE.getId(), rand.nextInt(17)+4, rand);
 							}
+							if(rand.nextFloat() < 0.001)
+							{
+								generateVein(world, blockX, blockY, blockZ, Material.IRON_ORE.getId(), rand.nextInt(7)+4, rand);
+							}
+							if(rand.nextFloat() < 0.0002)
+							{
+								generateVein(world, blockX, blockY, blockZ, Material.GOLD_ORE.getId(), rand.nextInt(5)+3, rand);
+							}
+							if(rand.nextFloat() < 0.0002)
+							{
+								generateVein(world, blockX, blockY, blockZ, Material.REDSTONE_ORE.getId(), rand.nextInt(15)+1, rand);
+							}
+							if(rand.nextFloat() < 0.00005)
+							{
+								generateVein(world, blockX, blockY, blockZ, Material.DIAMOND_ORE.getId(), rand.nextInt(8)+1, rand);
+							}
+							if(rand.nextDouble() < 0.000025)
+							{
+								generateVein(world, blockX, blockY, blockZ, Material.EMERALD_ORE.getId(), rand.nextInt(5)+4, rand);
+							}
+							if(distFromTop > 12)
+							{
+								if(rand.nextFloat() < 0.00004)
+								{
+									placePool(world, blockX, blockY, blockZ, rand);
+								}
+								if(rand.nextFloat() < 0.0004)
+								{
+									gravelBlob(world, blockX, blockY, blockZ, rand);
+								}
+							}
+							//TODO: villages n shit
 						}
 					}
 				}
