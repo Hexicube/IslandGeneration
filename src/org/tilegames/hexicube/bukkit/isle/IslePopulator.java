@@ -172,6 +172,26 @@ public class IslePopulator extends BlockPopulator
 		chunksection.setData(x & 15, y & 15, z & 15, 0);
 	}
 	
+	private void setAirIfAllowed(World world, int x, int y, int z)
+	{
+		ChunkSection chunksection = getChunkSection(world, x, y, z);
+		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.STONE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.DIRT.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SNOW.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.NETHERRACK.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GRASS.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.COAL_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.IRON_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GOLD_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.REDSTONE_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.DIAMOND_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.EMERALD_ORE.getId())
+		{
+			chunksection.setTypeId(x & 15, y & 15, z & 15, 0);
+			chunksection.setData(x & 15, y & 15, z & 15, 0);
+		}
+	}
+	
 	private void setBlockWithData(World world, int x, int y, int z, int id, int data)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
@@ -651,6 +671,58 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
+	private void emptyLine(World world, int[] start, int[] end)
+	{
+		if(start[0] == end[0]) end[0]++;
+		int startX, endX;
+		double posY, changeY, posZ, changeZ;
+		if(start[0] < end[0])
+		{
+			startX = start[0];
+			endX = end[0];
+			posY = (double)start[1];
+			changeY = (double)(end[1]-start[1])/(double)(end[0]-start[0]);
+			posZ = (double)start[2];
+			changeZ = (double)(end[2]-start[2])/(double)(end[0]-start[0]);
+		}
+		else
+		{
+			startX = end[0];
+			endX = start[0];
+			posY = (double)end[1];
+			changeY = (double)(start[1]-end[1])/(double)(start[0]-end[0]);
+			posZ = (double)end[2];
+			changeZ = (double)(start[2]-end[2])/(double)(start[0]-end[0]);
+		}
+		for(int x2 = startX; x2 <= endX; x2++)
+		{
+			for(int x = x2-2; x <= x2+2; x++)
+			{
+				for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
+				{
+					for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
+					{
+						int count = 0;
+						if(x == x2-2 || x == x2+2) count++;
+						if(y == (int)(posY-2) || y == (int)(posY+2)) count++;
+						if(z == (int)(posZ-2) || z == (int)(posZ+2)) count++;
+						if(count < 2)
+						{
+							setAirIfAllowed(world, x, y, z);
+						}
+					}
+				}
+			}
+			posY += changeY;
+			posZ += changeZ;
+		}
+	}
+	
+	private void generateDungeons(World world, int x, int y, int z, int count)
+	{
+		//TODO: something similar to vein gen
+	}
+	
 	@Override
 	public void populate(World world, Random rand, Chunk chunk)
 	{
@@ -890,6 +962,31 @@ public class IslePopulator extends BlockPopulator
 					}
 				}
 			}
+		}
+		int numCaves = (size-60)/30;
+		//int maxUpAmount = (int) (16*size*heightMult/(flatIsland?12000:2000)) - 4;
+		int maxUpAmount = -4;
+		int maxDownAmount = (int) (16*size*heightMult/3000) - 4;
+		int variance = maxUpAmount+maxDownAmount+1;
+		if(variance < 0) variance = 0;
+		for(int a = 0; a < numCaves; a++)
+		{
+			//TODO: improve this
+			int[] start = new int[]{rand.nextInt(size+1)+startX, rand.nextInt(variance+1)+startY-maxDownAmount, rand.nextInt(size+1)+startZ};
+			int[] end = new int[]{rand.nextInt(size+1)+startX, rand.nextInt(variance+1)+startY-maxDownAmount, rand.nextInt(size+1)+startZ};
+			int[] mid = new int[]{(start[0]+end[0])/2+rand.nextInt(size/10),
+								  (start[1]+end[1])/2+rand.nextInt(size/10),
+								  (start[2]+end[2])/2+rand.nextInt(size/10)};
+			int[] midstart = new int[]{(start[0]+mid[0])/2+rand.nextInt(size/20),
+									   (start[1]+mid[1])/2+rand.nextInt(size/20),
+									   (start[2]+mid[2])/2+rand.nextInt(size/20)};
+			int[] midend = new int[]{(end[0]+mid[0])/2+rand.nextInt(size/20),
+									 (end[1]+mid[1])/2+rand.nextInt(size/20),
+									 (end[2]+mid[2])/2+rand.nextInt(size/20)};
+			emptyLine(world, start, midstart);
+			emptyLine(world, midstart, mid);
+			emptyLine(world, mid, midend);
+			emptyLine(world, midend, end);
 		}
 		while(chunksToReload.size() > 0)
 		{
