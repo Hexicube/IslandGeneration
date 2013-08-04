@@ -673,49 +673,200 @@ public class IslePopulator extends BlockPopulator
 	
 	private void emptyLine(World world, int[] start, int[] end)
 	{
-		if(start[0] == end[0]) end[0]++;
-		int startX, endX;
-		double posY, changeY, posZ, changeZ;
-		if(start[0] < end[0])
+		int xDiff = Math.abs(start[0]-end[0]);
+		int yDiff = Math.abs(start[1]-end[1]);
+		int zDiff = Math.abs(start[2]-end[2]);
+		if(xDiff > yDiff)
 		{
-			startX = start[0];
-			endX = end[0];
-			posY = (double)start[1];
-			changeY = (double)(end[1]-start[1])/(double)(end[0]-start[0]);
-			posZ = (double)start[2];
-			changeZ = (double)(end[2]-start[2])/(double)(end[0]-start[0]);
+			if(xDiff > zDiff)
+			{
+				int startX, endX;
+				double posY, changeY, posZ, changeZ;
+				if(start[0] < end[0])
+				{
+					startX = start[0];
+					endX = end[0];
+					posY = (double)start[1];
+					changeY = (double)(end[1]-start[1])/(double)(end[0]-start[0]);
+					posZ = (double)start[2];
+					changeZ = (double)(end[2]-start[2])/(double)(end[0]-start[0]);
+				}
+				else
+				{
+					startX = end[0];
+					endX = start[0];
+					posY = (double)end[1];
+					changeY = (double)(start[1]-end[1])/(double)(start[0]-end[0]);
+					posZ = (double)end[2];
+					changeZ = (double)(start[2]-end[2])/(double)(start[0]-end[0]);
+				}
+				for(int x2 = startX; x2 <= endX; x2++)
+				{
+					for(int x = x2-2; x <= x2+2; x++)
+					{
+						for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
+						{
+							for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
+							{
+								int count = 0;
+								if(x == x2-2 || x == x2+2) count++;
+								if(y == (int)(posY-2) || y == (int)(posY+2)) count++;
+								if(z == (int)(posZ-2) || z == (int)(posZ+2)) count++;
+								if(count < 2)
+								{
+									setAirIfAllowed(world, x, y, z);
+								}
+							}
+						}
+					}
+					posY += changeY;
+					posZ += changeZ;
+				}
+			}
+			else
+			{
+				int startZ, endZ;
+				double posX, changeX, posY, changeY;
+				if(start[2] < end[2])
+				{
+					startZ = start[2];
+					endZ = end[2];
+					posX = (double)start[0];
+					changeX = (double)(end[0]-start[0])/(double)(end[2]-start[2]);
+					posY = (double)start[1];
+					changeY = (double)(end[1]-start[1])/(double)(end[2]-start[2]);
+				}
+				else
+				{
+					startZ = end[2];
+					endZ = start[2];
+					posX = (double)end[0];
+					changeX = (double)(start[0]-end[0])/(double)(start[2]-end[2]);
+					posY = (double)end[1];
+					changeY = (double)(start[1]-end[1])/(double)(start[2]-end[2]);
+				}
+				for(int z2 = startZ; z2 <= endZ; z2++)
+				{
+					for(int z = z2-2; z <= z2+2; z++)
+					{
+						for(int x = (int)(posX-2); x <= (int)(posX+2); x++)
+						{
+							for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
+							{
+								int count = 0;
+								if(x == (int)(posX-2) || x == (int)(posX+2)) count++;
+								if(y == (int)(posY-2) || y == (int)(posY+2)) count++;
+								if(z == z2-2 || z == z2+2) count++;
+								if(count < 2)
+								{
+									setAirIfAllowed(world, x, y, z);
+								}
+							}
+						}
+					}
+					posX += changeX;
+					posY += changeY;
+				}
+			}
 		}
 		else
 		{
-			startX = end[0];
-			endX = start[0];
-			posY = (double)end[1];
-			changeY = (double)(start[1]-end[1])/(double)(start[0]-end[0]);
-			posZ = (double)end[2];
-			changeZ = (double)(start[2]-end[2])/(double)(start[0]-end[0]);
-		}
-		for(int x2 = startX; x2 <= endX; x2++)
-		{
-			for(int x = x2-2; x <= x2+2; x++)
+			if(yDiff > zDiff)
 			{
-				for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
+				int startY, endY;
+				double posX, changeX, posZ, changeZ;
+				if(start[1] < end[1])
 				{
-					for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
+					startY = start[1];
+					endY = end[1];
+					posX = (double)start[0];
+					changeX = (double)(end[0]-start[0])/(double)(end[1]-start[1]);
+					posZ = (double)start[2];
+					changeZ = (double)(end[2]-start[2])/(double)(end[1]-start[1]);
+				}
+				else
+				{
+					startY = end[1];
+					endY = start[1];
+					posX = (double)end[0];
+					changeX = (double)(start[0]-end[0])/(double)(start[1]-end[1]);
+					posZ = (double)end[2];
+					changeZ = (double)(start[2]-end[2])/(double)(start[1]-end[1]);
+				}
+				for(int y2 = startY; y2 <= endY; y2++)
+				{
+					for(int y = y2-2; y <= y2+2; y++)
 					{
-						int count = 0;
-						if(x == x2-2 || x == x2+2) count++;
-						if(y == (int)(posY-2) || y == (int)(posY+2)) count++;
-						if(z == (int)(posZ-2) || z == (int)(posZ+2)) count++;
-						if(count < 2)
+						for(int x = (int)(posX-2); x <= (int)(posX+2); x++)
 						{
-							setAirIfAllowed(world, x, y, z);
+							for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
+							{
+								int count = 0;
+								if(x == (int)(posX-2) || x == (int)(posX+2)) count++;
+								if(y == y2-2 || y == y2+2) count++;
+								if(z == (int)(posZ-2) || z == (int)(posZ+2)) count++;
+								if(count < 2)
+								{
+									setAirIfAllowed(world, x, y, z);
+								}
+							}
 						}
 					}
+					posX += changeX;
+					posZ += changeZ;
 				}
 			}
-			posY += changeY;
-			posZ += changeZ;
+			else
+			{
+				int startZ, endZ;
+				double posX, changeX, posY, changeY;
+				if(start[2] < end[2])
+				{
+					startZ = start[2];
+					endZ = end[2];
+					posX = (double)start[0];
+					changeX = (double)(end[0]-start[0])/(double)(end[2]-start[2]);
+					posY = (double)start[1];
+					changeY = (double)(end[1]-start[1])/(double)(end[2]-start[2]);
+				}
+				else
+				{
+					startZ = end[2];
+					endZ = start[2];
+					posX = (double)end[0];
+					changeX = (double)(start[0]-end[0])/(double)(start[2]-end[2]);
+					posY = (double)end[1];
+					changeY = (double)(start[1]-end[1])/(double)(start[2]-end[2]);
+				}
+				for(int z2 = startZ; z2 <= endZ; z2++)
+				{
+					for(int z = z2-2; z <= z2+2; z++)
+					{
+						for(int x = (int)(posX-2); x <= (int)(posX+2); x++)
+						{
+							for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
+							{
+								int count = 0;
+								if(x == (int)(posX-2) || x == (int)(posX+2)) count++;
+								if(y == (int)(posY-2) || y == (int)(posY+2)) count++;
+								if(z == z2-2 || z == z2+2) count++;
+								if(count < 2)
+								{
+									setAirIfAllowed(world, x, y, z);
+								}
+							}
+						}
+					}
+					posX += changeX;
+					posY += changeY;
+				}
+			}
 		}
+	}
+	
+	private void generateBallRoom(World world, int x, int y, int z)
+	{
+		//TODO: stuff here
 	}
 	
 	private void generateDungeons(World world, int x, int y, int z, int count)
@@ -752,6 +903,9 @@ public class IslePopulator extends BlockPopulator
 		int startX = chunk.getX()*16+8 - size/2;
 		int startY = 150+rand.nextInt(61);
 		int startZ = chunk.getZ()*16+8 - size/2;
+		ArrayList<int[]> points = new ArrayList<int[]>();
+		ArrayList<int[]> poolPoints = new ArrayList<int[]>();
+		ArrayList<int[]> gravelPoints = new ArrayList<int[]>();
 		for(int x = 0; x < size; x++)
 		{
 			for(int z = 0; z < size; z++)
@@ -788,6 +942,10 @@ public class IslePopulator extends BlockPopulator
 						int blockX = startX+x, blockY = startY+y, blockZ = startZ+z;
 						int distFromTop = upAmount-y;
 						int distFromBottom = downAmount+y;
+						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextInt(35000) == 20747)
+						{
+							points.add(new int[]{blockX, blockY, blockZ});
+						}
 						if(islandType == Biome.EXTREME_HILLS)
 						{
 							if(sandEdges)
@@ -950,11 +1108,11 @@ public class IslePopulator extends BlockPopulator
 							{
 								if(rand.nextFloat() < 0.00004)
 								{
-									placePool(world, blockX, blockY, blockZ, rand);
+									poolPoints.add(new int[]{blockX,blockY,blockZ});
 								}
 								if(rand.nextFloat() < 0.0004)
 								{
-									gravelBlob(world, blockX, blockY, blockZ, rand);
+									gravelPoints.add(new int[]{blockX,blockY,blockZ});
 								}
 							}
 							//TODO: villages n shit
@@ -963,17 +1121,21 @@ public class IslePopulator extends BlockPopulator
 				}
 			}
 		}
-		int numCaves = (size-60)/30;
-		//int maxUpAmount = (int) (16*size*heightMult/(flatIsland?12000:2000)) - 4;
-		int maxUpAmount = -4;
-		int maxDownAmount = (int) (16*size*heightMult/3000) - 4;
-		int variance = maxUpAmount+maxDownAmount+1;
-		if(variance < 0) variance = 0;
-		for(int a = 0; a < numCaves; a++)
+		while(gravelPoints.size() > 0)
 		{
-			//TODO: improve this
-			int[] start = new int[]{rand.nextInt(size+1)+startX, rand.nextInt(variance+1)+startY-maxDownAmount, rand.nextInt(size+1)+startZ};
-			int[] end = new int[]{rand.nextInt(size+1)+startX, rand.nextInt(variance+1)+startY-maxDownAmount, rand.nextInt(size+1)+startZ};
+			int[] point = gravelPoints.remove(0);
+			gravelBlob(world, point[0], point[1], point[2], rand);
+		}
+		while(poolPoints.size() > 0)
+		{
+			int[] point = poolPoints.remove(0);
+			placePool(world, point[0], point[1], point[2], rand);
+		}
+		while(points.size() > 1)
+		{
+			int[] start = points.remove(rand.nextInt(points.size()));
+			boolean reuseEnd = rand.nextBoolean();
+			int[] end = reuseEnd?points.get(rand.nextInt(points.size())):points.remove(rand.nextInt(points.size()));
 			int[] mid = new int[]{(start[0]+end[0])/2+rand.nextInt(size/10),
 								  (start[1]+end[1])/2+rand.nextInt(size/10),
 								  (start[2]+end[2])/2+rand.nextInt(size/10)};
@@ -987,6 +1149,7 @@ public class IslePopulator extends BlockPopulator
 			emptyLine(world, midstart, mid);
 			emptyLine(world, mid, midend);
 			emptyLine(world, midend, end);
+			if(reuseEnd && rand.nextInt(125) == 73) generateBallRoom(world, end[0], end[1], end[2]);
 		}
 		while(chunksToReload.size() > 0)
 		{
