@@ -14,12 +14,15 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Chest;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.craftbukkit.v1_6_R2.CraftChunk;
 import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
 import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.BlockPopulator;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 @SuppressWarnings("deprecation")
 public class IslePopulator extends BlockPopulator
@@ -161,25 +164,39 @@ public class IslePopulator extends BlockPopulator
 		return chunksection;
 	}
 	
-	private void setBlock(World world, int x, int y, int z, int id)
+	private int getBlock(World world, int x, int y, int z)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
-		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.MOB_SPAWNER.getId())
-		{
-			world.getBlockAt(x, y, z).setTypeId(0);
-		}
-		chunksection.setTypeId(x & 15, y & 15, z & 15, id);
-		chunksection.setData(x & 15, y & 15, z & 15, 0);
+		return chunksection.getTypeId(x & 15, y & 15, z & 15);
 	}
 	
-	private void setAirIfAllowed(World world, int x, int y, int z)
+	private void setBlock(World world, int x, int y, int z, int id)
+	{
+		setBlockWithData(world, x, y, z, id, 0);
+	}
+	
+	private void setBlockWithData(World world, int x, int y, int z, int id, int data)
+	{
+		ChunkSection chunksection = getChunkSection(world, x, y, z);
+		chunksection.setTypeId(x & 15, y & 15, z & 15, id);
+		chunksection.setData(x & 15, y & 15, z & 15, data);
+	}
+	
+	private boolean setAirIfAllowed(World world, int x, int y, int z)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
 		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.STONE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.COBBLESTONE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.MOSSY_COBBLESTONE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.DIRT.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SNOW.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.NETHERRACK.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GRASS.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GRAVEL.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SAND.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.CACTUS.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.WOOD.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.LEAVES.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.COAL_ORE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.IRON_ORE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GOLD_ORE.getId() ||
@@ -189,14 +206,9 @@ public class IslePopulator extends BlockPopulator
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, 0);
 			chunksection.setData(x & 15, y & 15, z & 15, 0);
+			return true;
 		}
-	}
-	
-	private void setBlockWithData(World world, int x, int y, int z, int id, int data)
-	{
-		ChunkSection chunksection = getChunkSection(world, x, y, z);
-		chunksection.setTypeId(x & 15, y & 15, z & 15, id);
-		chunksection.setData(x & 15, y & 15, z & 15, data);
+		return false;
 	}
 	
 	private void setFluidAndNeighbourStone(World world, int x, int y, int z, boolean lava)
@@ -237,19 +249,12 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
-	private void setBlockIfAlreadyAir(World world, int x, int y, int z, int id)
+	private boolean setBlockIfAlreadyAir(World world, int x, int y, int z, int id)
 	{
-		ChunkSection chunksection = getChunkSection(world, x, y, z);
-		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == 0 ||
-		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SNOW.getId() ||
-		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.VINE.getId())
-		{
-			chunksection.setTypeId(x & 15, y & 15, z & 15, id);
-			chunksection.setData(x & 15, y & 15, z & 15, 0);
-		}
+		return setBlockIfAlreadyAirWithData(world, x, y, z, id, 0);
 	}
 	
-	private void setBlockIfAlreadyAirWithData(World world, int x, int y, int z, int id, int data)
+	private boolean setBlockIfAlreadyAirWithData(World world, int x, int y, int z, int id, int data)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
 		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == 0 ||
@@ -258,7 +263,9 @@ public class IslePopulator extends BlockPopulator
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, id);
 			chunksection.setData(x & 15, y & 15, z & 15, data);
+			return true;
 		}
+		return false;
 	}
 	
 	private boolean setBlockIfAcceptsOre(World world, int x, int y, int z, int id)
@@ -704,9 +711,9 @@ public class IslePopulator extends BlockPopulator
 				{
 					for(int x = x2-2; x <= x2+2; x++)
 					{
-						for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
+						for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
 						{
-							for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
+							for(int y = (int)(posY-2); y <= (int)(posY+2); y++)
 							{
 								int count = 0;
 								if(x == x2-2 || x == x2+2) count++;
@@ -795,9 +802,9 @@ public class IslePopulator extends BlockPopulator
 				}
 				for(int y2 = startY; y2 <= endY; y2++)
 				{
-					for(int y = y2-2; y <= y2+2; y++)
+					for(int x = (int)(posX-2); x <= (int)(posX+2); x++)
 					{
-						for(int x = (int)(posX-2); x <= (int)(posX+2); x++)
+						for(int y = y2-2; y <= y2+2; y++)
 						{
 							for(int z = (int)(posZ-2); z <= (int)(posZ+2); z++)
 							{
@@ -866,19 +873,240 @@ public class IslePopulator extends BlockPopulator
 	
 	private void generateBallRoom(World world, int x, int y, int z)
 	{
-		//TODO: stuff here
+		//TODO: spherical room, do I need this?
 	}
 	
-	private void generateDungeons(World world, int x, int y, int z, int count)
+	private void generateDungeon(World world, int x, int y, int z, Random rand)
 	{
-		//TODO: something similar to vein gen
+		int width = 7+rand.nextInt(5);
+		//TODO: square dungeon
+	}
+	
+	private void generateLinkedDungeons(World world, int x, int y, int z, int count, Random rand)
+	{
+		int placedRooms = 0;
+		ArrayList<int[]> positions = new ArrayList<int[]>();
+		positions.add(new int[]{x, y, z, -1});
+		while(count > 0 && positions.size() > 0)
+		{
+			int[] position = positions.remove(rand.nextInt(positions.size()));
+			if(getBlock(world, position[0], position[1]+1, position[2]) == Material.MOB_SPAWNER.getId()) continue;
+			if(getBlock(world, position[0]-4, position[1], position[2]-4) == 0 ||
+			   getBlock(world, position[0]-4, position[1], position[2]+4) == 0 ||
+			   getBlock(world, position[0]+4, position[1], position[2]-4) == 0 ||
+			   getBlock(world, position[0]+4, position[1], position[2]+4) == 0 ||
+			   getBlock(world, position[0], position[1], position[2]) == 0) continue;
+			count--;
+			placedRooms++;
+			for(int xPos = position[0]-4; xPos <= position[0]+4; xPos++)
+			{
+				for(int zPos = position[2]-4; zPos <= position[2]+4; zPos++)
+				{
+					for(int yPos = position[1]; yPos <= position[1]+5; yPos++)
+					{
+						if(xPos == position[0]-4 || xPos == position[0]+4 ||
+						   yPos == position[1] || yPos == position[1]+5 ||
+						   zPos == position[2]-4 || zPos == position[2]+4)
+						{
+							setAirIfAllowed(world, xPos, yPos, zPos);
+							setBlockIfAlreadyAir(world, xPos, yPos, zPos, (yPos == position[1] && rand.nextBoolean())?Material.MOSSY_COBBLESTONE.getId():Material.COBBLESTONE.getId());
+						}
+						else setAirIfAllowed(world, xPos, yPos, zPos);
+					}
+				}
+			}
+			if(position[3] == 0) //link -y
+			{
+				for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+				{
+					for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+					{
+						setAirIfAllowed(world, xPos, position[1], zPos);
+					}
+				}
+			}
+			else if(position[3] == 1) //link +y
+			{
+				for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+				{
+					for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+					{
+						setAirIfAllowed(world, xPos, position[1]+5, zPos);
+					}
+				}
+			}
+			else if(position[3] == 2) //link -x
+			{
+				for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+				{
+					for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+					{
+						setAirIfAllowed(world, position[0]-4, yPos, zPos);
+					}
+				}
+			}
+			else if(position[3] == 3) //link +x
+			{
+				for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+				{
+					for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+					{
+						setAirIfAllowed(world, position[0]+4, yPos, zPos);
+					}
+				}
+			}
+			else if(position[3] == 4) //link -z
+			{
+				for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+				{
+					for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+					{
+						setAirIfAllowed(world, xPos, yPos, position[2]-4);
+					}
+				}
+			}
+			else if(position[3] == 5) //link +z
+			{
+				for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+				{
+					for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+					{
+						setAirIfAllowed(world, xPos, yPos, position[2]+4);
+					}
+				}
+			}
+			setAirIfAllowed(world, position[0], position[1]+1, position[2]);
+			if(setBlockIfAlreadyAir(world, position[0], position[1]+1, position[2], Material.MOB_SPAWNER.getId()))
+			{
+				CreatureType mobType = null;
+				int val = rand.nextInt(25);
+				if(val < 7) mobType = CreatureType.SKELETON;
+				else if(val < 14) mobType = CreatureType.ZOMBIE;
+				else if(val < 21) mobType = CreatureType.SPIDER;
+				else mobType = CreatureType.CAVE_SPIDER;
+				((CreatureSpawner)world.getBlockAt(position[0], position[1]+1, position[2]).getState()).setCreatureType(mobType);
+			}
+			int chestCount = rand.nextInt(4);
+			for(int a = 0; a < chestCount; a++)
+			{
+				int wallID = rand.nextInt(4);
+				int chestX, chestZ, chestData;
+				if(wallID == 0)
+				{
+					chestX = position[0]-3;
+					chestZ = position[2]-3+rand.nextInt(7);
+					chestData = 5;
+				}
+				else if(wallID == 1)
+				{
+					chestX = position[0]+3;
+					chestZ = position[2]-3+rand.nextInt(7);
+					chestData = 4;
+				}
+				else if(wallID == 2)
+				{
+					chestX = position[0]-3+rand.nextInt(7);
+					chestZ = position[2]-3;
+					chestData = 3;
+				}
+				else if(wallID == 3)
+				{
+					chestX = position[0]-3+rand.nextInt(7);
+					chestZ = position[2]+3;
+					chestData = 2;
+				}
+				else
+				{
+					chestX = position[0];
+					chestZ = position[2]+1;
+					chestData = 2;
+				}
+				if(getBlock(world, chestX, position[1]+1, chestZ) == 0)
+				{
+					setAirIfAllowed(world, chestX, position[1]+1, chestZ);
+					if(setBlockIfAlreadyAirWithData(world, chestX, position[1]+1, chestZ, Material.CHEST.getId(), chestData))
+						populateChest(world, chestX, position[1]+1, chestZ, rand);
+				}
+			}
+			positions.add(new int[]{position[0], position[1]+5, position[2], 0});
+			positions.add(new int[]{position[0], position[1]-5, position[2], 1});
+			positions.add(new int[]{position[0]+8, position[1], position[2], 2});
+			positions.add(new int[]{position[0]-8, position[1], position[2], 3});
+			positions.add(new int[]{position[0], position[1], position[2]+8, 4});
+			positions.add(new int[]{position[0], position[1], position[2]-8, 5});
+		}
+		System.out.println("Placed a "+placedRooms+"-room dungeon centred at: "+x+"/"+y+"/"+z);
+	}
+	
+	private void populateChest(World world, int x, int y, int z, Random rand)
+	{
+		Chest c = (Chest)world.getBlockAt(x, y, z).getState();
+		Inventory v = c.getInventory();
+		int numItems = 2+rand.nextInt(3)+rand.nextInt(4)+rand.nextInt(3);
+		for(int a = 0; a < numItems; a++)
+		{
+			int val = rand.nextInt(1000);
+			ItemStack stack = null;
+			if(val < 400)
+			{
+				int amount = 2+rand.nextInt(7);
+				stack = new ItemStack(Material.REDSTONE, amount);
+			}
+			else if(val < 550)
+			{
+				int amount = 2+rand.nextInt(3);
+				stack = new ItemStack(Material.IRON_INGOT, amount);
+			}
+			else if(val < 700)
+			{
+				stack = new ItemStack(Material.SADDLE);
+			}
+			else if(val < 800)
+			{
+				int amount = 1+rand.nextInt(3);
+				stack = new ItemStack(Material.GOLD_INGOT, amount);
+			}
+			else if(val < 850)
+			{
+				int amount = 1+rand.nextInt(2);
+				stack = new ItemStack(Material.EYE_OF_ENDER, amount);
+			}
+			else if(val < 900)
+			{
+				int amount = 1+rand.nextInt(2);
+				stack = new ItemStack(Material.DIAMOND, amount);
+			}
+			else if(val < 950)
+			{
+				int amount = 1+rand.nextInt(10);
+				stack = new ItemStack(Material.SLIME_BALL, amount);
+			}
+			else
+			{
+				Material m = null;
+				int number = 3+rand.nextInt(10);
+				if(number == 3) m = Material.RECORD_3;
+				else if(number == 4) m = Material.RECORD_4;
+				else if(number == 5) m = Material.RECORD_5;
+				else if(number == 6) m = Material.RECORD_6;
+				else if(number == 7) m = Material.RECORD_7;
+				else if(number == 8) m = Material.RECORD_8;
+				else if(number == 9) m = Material.RECORD_9;
+				else if(number == 10) m = Material.RECORD_10;
+				else if(number == 11) m = Material.RECORD_11;
+				else if(number == 12) m = Material.RECORD_12;
+				if(m == null) System.out.println("Bad record number: "+number);
+				else stack = new ItemStack(m);
+			}
+			v.setItem(rand.nextInt(3)*9+a, stack);
+		}
 	}
 	
 	@Override
 	public void populate(World world, Random rand, Chunk chunk)
 	{
-		if((chunk.getX()%12 != 0 || chunk.getZ()%12 != 0) &&
-		   (Math.abs(chunk.getX())%12 != 6 || Math.abs(chunk.getZ())%12 != 6)) return;
+		if((chunk.getX()%20 != 0 || chunk.getZ()%20 != 0) &&
+		   (Math.abs(chunk.getX())%20 != 10 || Math.abs(chunk.getZ())%20 != 10)) return;
 		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R2.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean gravel = false;
@@ -897,7 +1125,7 @@ public class IslePopulator extends BlockPopulator
 		else if(randVal < 900) islandType = Biome.DESERT;
 		else if(randVal < 993) islandType = Biome.EXTREME_HILLS;
 		else islandType = Biome.MUSHROOM_ISLAND;
-		int size = rand.nextInt(221)+40;
+		int size = rand.nextInt(141)+60;
 		float heightMult = rand.nextFloat()/2.0f+0.75f;
 		int[][] tileData = genIslandData(size, rand);
 		int startX = chunk.getX()*16+8 - size/2;
@@ -1008,12 +1236,12 @@ public class IslePopulator extends BlockPopulator
 						}
 						else if(islandType == Biome.TAIGA)
 						{
-							if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
+							/*if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
 							{
 								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, gravel?Material.COBBLESTONE.getId():Material.SANDSTONE.getId());
 								else setBlock(world, blockX, blockY, blockZ, gravel?Material.GRAVEL.getId():Material.SAND.getId());
 							}
-							else if(distFromTop == 0)
+							else */if(distFromTop == 0)
 							{
 								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 								if(rand.nextInt(120) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
@@ -1033,12 +1261,12 @@ public class IslePopulator extends BlockPopulator
 						}
 						else if(islandType == Biome.JUNGLE)
 						{
-							if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
+							/*if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
 							{
 								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, gravel?Material.COBBLESTONE.getId():Material.SANDSTONE.getId());
 								else setBlock(world, blockX, blockY, blockZ, gravel?Material.GRAVEL.getId():Material.SAND.getId());
 							}
-							else if(distFromTop == 0)
+							else */if(distFromTop == 0)
 							{
 								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 								if(rand.nextInt(40) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
@@ -1149,7 +1377,16 @@ public class IslePopulator extends BlockPopulator
 			emptyLine(world, midstart, mid);
 			emptyLine(world, mid, midend);
 			emptyLine(world, midend, end);
-			if(reuseEnd && rand.nextInt(125) == 73) generateBallRoom(world, end[0], end[1], end[2]);
+			if(reuseEnd)
+			{
+				if(rand.nextInt(125) == 73) generateBallRoom(world, end[0], end[1], end[2]);
+			}
+			else if(rand.nextInt(10) == 4) points.add(mid);
+		}
+		if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND && rand.nextInt(50) == 7)
+		//if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND)
+		{
+			generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, (5+rand.nextInt(21))*size*size/10000, rand);
 		}
 		while(chunksToReload.size() > 0)
 		{
