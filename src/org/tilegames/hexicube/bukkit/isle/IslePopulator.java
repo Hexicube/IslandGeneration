@@ -875,9 +875,50 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
-	private void generateBallRoom(World world, int x, int y, int z)
+	private void createVillage(World world, int islandX, int islandY, int islandZ, int[][] tileData, float heightMult, Random rand)
 	{
-		//TODO: spherical room, do I need this?
+		ArrayList<int[]> positions = new ArrayList<int[]>();
+		positions.add(new int[]{tileData.length/2, tileData[0].length/2});
+		while(positions.size() > 0)
+		{
+			int[] position = positions.remove(rand.nextInt(positions.size()));
+			int xPos = position[0]+islandX;
+			int yPos;
+			try
+			{
+				yPos = (int)((tileData[position[0]][position[1]]-(tileData[position[0]-1][position[1]]+tileData[position[0]+1][position[1]]+tileData[position[0]][position[1]-1]+tileData[position[0]][position[1]+1])/16)*tileData.length*heightMult/12000);;
+			}
+			catch(IndexOutOfBoundsException e)
+			{
+				continue;
+			}
+			int zPos = position[1]+islandZ;
+			//TODO: select house and get size of it
+			int width = 4, height = 9, depth = 4;
+			
+			boolean found = false;
+			for(int y1 = -2; y1 <= 2 && !found; y1++)
+			{
+				if(getBlock(world, xPos, yPos+y1, zPos) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos+width, yPos+y1, zPos+depth) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos-width, yPos+y1, zPos+depth) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos+width, yPos+y1, zPos-depth) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos-width, yPos+y1, zPos-depth) == Material.WOOD.getId()) found = true;
+			}
+			if(found) continue;
+			if(getBlock(world, xPos, yPos+height+2, zPos) != 0) continue;
+			if(getBlock(world, xPos+width, yPos+height+2, zPos+depth) != 0) continue;
+			if(getBlock(world, xPos-width, yPos+height+2, zPos+depth) != 0) continue;
+			if(getBlock(world, xPos+width, yPos+height+2, zPos-depth) != 0) continue;
+			if(getBlock(world, xPos-width, yPos+height+2, zPos-depth) != 0) continue;
+			//TODO: place house
+			/*
+			positions.add(new int[]{xPos+7+rand.nextInt(4), zPos+7+rand.nextInt(4)});
+			positions.add(new int[]{xPos-7-rand.nextInt(4), zPos+7+rand.nextInt(4)});
+			positions.add(new int[]{xPos+7+rand.nextInt(4), zPos-7-rand.nextInt(4)});
+			positions.add(new int[]{xPos-7-rand.nextInt(4), zPos-7-rand.nextInt(4)});
+			*/
+		}
 	}
 	
 	private void generateLinkedDungeons(World world, int x, int y, int z, int count, Random rand)
@@ -1103,8 +1144,8 @@ public class IslePopulator extends BlockPopulator
 	@Override
 	public void populate(World world, Random rand, Chunk chunk)
 	{
-		if((chunk.getX()%20 != 0 || chunk.getZ()%20 != 0) &&
-		   (Math.abs(chunk.getX())%20 != 10 || Math.abs(chunk.getZ())%20 != 10)) return;
+		if((chunk.getX()%(IslandWorldGeneration.islandSpacing*2) != 0 || chunk.getZ()%(IslandWorldGeneration.islandSpacing*2) != 0) &&
+		   (Math.abs(chunk.getX())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing || Math.abs(chunk.getZ())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing)) return;
 		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R2.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean gravel = false;
@@ -1127,7 +1168,7 @@ public class IslePopulator extends BlockPopulator
 		float heightMult = rand.nextFloat()/2.0f+0.75f;
 		int[][] tileData = genIslandData(size, rand);
 		int startX = chunk.getX()*16+8 - size/2;
-		int startY = 150+rand.nextInt(61);
+		int startY = IslandWorldGeneration.islandStartY+rand.nextInt(61);
 		int startZ = chunk.getZ()*16+8 - size/2;
 		ArrayList<int[]> points = new ArrayList<int[]>();
 		ArrayList<int[]> poolPoints = new ArrayList<int[]>();
@@ -1308,37 +1349,37 @@ public class IslePopulator extends BlockPopulator
 						}
 						if(distFromTop > 4 && distFromBottom > 2)
 						{
-							if(rand.nextFloat() < 0.001)
+							if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[0])
 							{
 								generateVein(world, blockX, blockY, blockZ, Material.COAL_ORE.getId(), rand.nextInt(17)+4, rand);
 							}
-							if(rand.nextFloat() < 0.001)
+							if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[1])
 							{
 								generateVein(world, blockX, blockY, blockZ, Material.IRON_ORE.getId(), rand.nextInt(7)+4, rand);
 							}
-							if(rand.nextFloat() < 0.0002)
+							if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[2])
 							{
 								generateVein(world, blockX, blockY, blockZ, Material.GOLD_ORE.getId(), rand.nextInt(5)+3, rand);
 							}
-							if(rand.nextFloat() < 0.0002)
+							if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[3])
 							{
 								generateVein(world, blockX, blockY, blockZ, Material.REDSTONE_ORE.getId(), rand.nextInt(15)+1, rand);
 							}
-							if(rand.nextFloat() < 0.00005)
+							if(rand.nextDouble() < 0.00005*IslandWorldGeneration.rarityModifiers[4])
 							{
 								generateVein(world, blockX, blockY, blockZ, Material.DIAMOND_ORE.getId(), rand.nextInt(8)+1, rand);
 							}
-							if(rand.nextDouble() < 0.000025)
+							if(rand.nextDouble() < 0.000025*IslandWorldGeneration.rarityModifiers[5])
 							{
 								generateVein(world, blockX, blockY, blockZ, Material.EMERALD_ORE.getId(), rand.nextInt(5)+4, rand);
 							}
 							if(distFromTop > 12)
 							{
-								if(rand.nextFloat() < 0.00004)
+								if(rand.nextDouble() < 0.00004*IslandWorldGeneration.rarityModifiers[6])
 								{
 									poolPoints.add(new int[]{blockX,blockY,blockZ});
 								}
-								if(rand.nextFloat() < 0.0004)
+								if(rand.nextDouble() < 0.0004*IslandWorldGeneration.rarityModifiers[7])
 								{
 									gravelPoints.add(new int[]{blockX,blockY,blockZ});
 								}
@@ -1366,8 +1407,7 @@ public class IslePopulator extends BlockPopulator
 		while(points.size() > 1)
 		{
 			int[] start = points.remove(rand.nextInt(points.size()));
-			boolean reuseEnd = rand.nextBoolean();
-			int[] end = reuseEnd?points.get(rand.nextInt(points.size())):points.remove(rand.nextInt(points.size()));
+			int[] end = points.remove(rand.nextInt(points.size()));
 			int[] mid = new int[]{(start[0]+end[0])/2+rand.nextInt(size/10),
 								  (start[1]+end[1])/2+rand.nextInt(size/10),
 								  (start[2]+end[2])/2+rand.nextInt(size/10)};
@@ -1381,19 +1421,17 @@ public class IslePopulator extends BlockPopulator
 			emptyLine(world, midstart, mid);
 			emptyLine(world, mid, midend);
 			emptyLine(world, midend, end);
-			if(reuseEnd)
-			{
-				if(rand.nextInt(125) == 73) generateBallRoom(world, end[0], end[1], end[2]);
-			}
-			else if(rand.nextInt(6) == 4) points.add(mid);
+			if(rand.nextInt(6) == 1) points.add(start);
+			if(rand.nextInt(6) == 3) points.add(mid);
+			if(rand.nextInt(6) == 5) points.add(end);
 		}
 		if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND)
 		{
 			if(rand.nextInt(50) == 7) generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, (5+rand.nextInt(21))*size*size/10000, rand);
-			else if(rand.nextInt(3) == 1)
-			{
-				//TODO: generate village
-			}
+		}
+		if(flatIsland && islandType == Biome.PLAINS && rand.nextInt(3) == 1)
+		{
+			createVillage(world, startX, startY, startZ, tileData, heightMult, rand);
 		}
 		while(chunksToReload.size() > 0)
 		{
