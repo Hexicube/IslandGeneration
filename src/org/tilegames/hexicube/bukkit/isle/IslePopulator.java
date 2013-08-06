@@ -886,7 +886,7 @@ public class IslePopulator extends BlockPopulator
 			int yPos;
 			try
 			{
-				yPos = (int)((tileData[position[0]][position[1]]-(tileData[position[0]-1][position[1]]+tileData[position[0]+1][position[1]]+tileData[position[0]][position[1]-1]+tileData[position[0]][position[1]+1])/16)*tileData.length*heightMult/12000);;
+				yPos = islandY+(int)((tileData[position[0]][position[1]]-(tileData[position[0]-1][position[1]]+tileData[position[0]+1][position[1]]+tileData[position[0]][position[1]-1]+tileData[position[0]][position[1]+1])/16)*tileData.length*heightMult/12000);;
 			}
 			catch(IndexOutOfBoundsException e)
 			{
@@ -1431,7 +1431,7 @@ public class IslePopulator extends BlockPopulator
 		}
 		if(flatIsland && islandType == Biome.PLAINS && rand.nextInt(3) == 1)
 		{
-			createVillage(world, startX, startY, startZ, tileData, heightMult, rand);
+			//createVillage(world, startX, startY, startZ, tileData, heightMult, rand);
 		}
 		while(chunksToReload.size() > 0)
 		{
