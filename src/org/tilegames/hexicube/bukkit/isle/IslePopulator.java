@@ -1072,10 +1072,77 @@ public class IslePopulator extends BlockPopulator
 		int placedRooms = 0;
 		ArrayList<int[]> positions = new ArrayList<int[]>();
 		positions.add(new int[]{x, y, z, -1});
-		while(count > 0 && positions.size() > 0)
+		while(positions.size() > 0)
 		{
 			int[] position = positions.remove(rand.nextInt(positions.size()));
-			if(getBlock(world, position[0], position[1]+1, position[2]) == Material.MOB_SPAWNER.getId()) continue;
+			if(getBlock(world, position[0], position[1]+1, position[2]) == Material.MOB_SPAWNER.getId())
+			{
+				//if(rand.nextInt(3) == 1)
+				{
+					if(position[3] == 0) //link -y
+					{
+						for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+						{
+							for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+							{
+								setAirIfAllowed(world, xPos, position[1], zPos, true);
+							}
+						}
+					}
+					else if(position[3] == 1) //link +y
+					{
+						for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+						{
+							for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+							{
+								setAirIfAllowed(world, xPos, position[1]+5, zPos, true);
+							}
+						}
+					}
+					else if(position[3] == 2) //link -x
+					{
+						for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+						{
+							for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+							{
+								setAirIfAllowed(world, position[0]-4, yPos, zPos, true);
+							}
+						}
+					}
+					else if(position[3] == 3) //link +x
+					{
+						for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+						{
+							for(int zPos = position[2]-1; zPos <= position[2]+1; zPos++)
+							{
+								setAirIfAllowed(world, position[0]+4, yPos, zPos, true);
+							}
+						}
+					}
+					else if(position[3] == 4) //link -z
+					{
+						for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+						{
+							for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+							{
+								setAirIfAllowed(world, xPos, yPos, position[2]-4, true);
+							}
+						}
+					}
+					else if(position[3] == 5) //link +z
+					{
+						for(int yPos = position[1]+1; yPos <= position[1]+3; yPos++)
+						{
+							for(int xPos = position[0]-1; xPos <= position[0]+1; xPos++)
+							{
+								setAirIfAllowed(world, xPos, yPos, position[2]+4, true);
+							}
+						}
+					}
+				}
+				continue;
+			}
+			if(count <= 0) continue;
 			if(getBlock(world, position[0]-4, position[1], position[2]-4) == 0 ||
 			   getBlock(world, position[0]-4, position[1], position[2]+4) == 0 ||
 			   getBlock(world, position[0]+4, position[1], position[2]-4) == 0 ||
