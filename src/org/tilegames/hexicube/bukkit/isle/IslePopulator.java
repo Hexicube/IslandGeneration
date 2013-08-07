@@ -992,7 +992,7 @@ public class IslePopulator extends BlockPopulator
 			System.out.println("Tried to create village without loaded schematics!");
 			return;
 		}
-		System.out.println("Placing village at: "+islandX+","+islandY+","+islandZ);
+		int count = 0;
 		int totalWeight = 0;
 		int size = schematics.size();
 		for(int a = 0; a < size; a++)
@@ -1047,6 +1047,7 @@ public class IslePopulator extends BlockPopulator
 			if(getBlock(world, xPos-left, yPos-1, zPos+back) == 0) continue;
 			if(getBlock(world, xPos+right, yPos-1, zPos-forward) == 0) continue;
 			if(getBlock(world, xPos-left, yPos-1, zPos-forward) == 0) continue;
+			count++;
 			for(int x2 = 0; x2 <= left+right; x2++)
 			{
 				for(int z2 = 0; z2 <= back+forward; z2++)
@@ -1063,6 +1064,7 @@ public class IslePopulator extends BlockPopulator
 			positions.add(new int[]{position[0]+2+right+rand.nextInt(4), position[1]+2+back+rand.nextInt(4)});
 			positions.add(new int[]{position[0]-2-left-rand.nextInt(4), position[1]+2+back+rand.nextInt(4)});
 		}
+		System.out.println("Placed a "+count+"-house village at: "+islandX+"/"+islandY+"/"+islandZ);
 	}
 	
 	private void generateLinkedDungeons(World world, int x, int y, int z, int count, Random rand)
@@ -1374,7 +1376,7 @@ public class IslePopulator extends BlockPopulator
 						int blockX = startX+x, blockY = startY+y, blockZ = startZ+z;
 						int distFromTop = upAmount-y;
 						int distFromBottom = downAmount+y;
-						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextInt(35000) == 20747)
+						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextInt(60000) == 20747)
 						{
 							points.add(new int[]{blockX, blockY, blockZ});
 						}
@@ -1585,9 +1587,9 @@ public class IslePopulator extends BlockPopulator
 			emptyLine(world, midstart, mid);
 			emptyLine(world, mid, midend);
 			emptyLine(world, midend, end);
-			if(rand.nextInt(6) == 1) points.add(start);
-			if(rand.nextInt(6) == 3) points.add(mid);
-			if(rand.nextInt(6) == 5) points.add(end);
+			if(rand.nextBoolean()) points.add(start);
+			if(rand.nextBoolean()) points.add(mid);
+			if(rand.nextBoolean()) points.add(end);
 		}
 		if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND)
 		{
