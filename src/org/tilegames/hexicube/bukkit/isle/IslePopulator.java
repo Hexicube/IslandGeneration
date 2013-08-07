@@ -30,6 +30,114 @@ public class IslePopulator extends BlockPopulator
 	private ArrayList<net.minecraft.server.v1_6_R2.Chunk> chunksToReload;
 	private UsedSections lastUsedSections;
 	
+	private static ArrayList<Schematic> schematics;
+	
+	public static void interpretSchematic(String data)
+	{
+		String[] data2 = data.split("=");
+		if(data2.length < 4)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Missing data.");
+			return;
+		}
+		String[] materials = data2[1].split(";");
+		Schematic s = new Schematic();
+		s.materialList = new int[materials.length];
+		s.materialListData = new int[materials.length];
+		for(int a = 0; a < materials.length; a++)
+		{
+			int id = 0, dmg = 0;
+			try
+			{
+				String[] data3 = materials[a].split("\\.");
+				id = Integer.parseInt(data3[0]);
+				if(data3.length > 1) dmg = Integer.parseInt(data3[1]);
+			}
+			catch(NumberFormatException e)
+			{
+				System.out.println("Invalid schematic: "+data);
+				System.out.println("Reason: Bad number for material.");
+				return;
+			}
+			s.materialList[a] = id;
+			s.materialListData[a] = dmg;
+		}
+		String[] data3 = data2[2].split("\\.");
+		if(data3.length < 3)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Bad size.");
+			return;
+		}
+		try
+		{
+			s.width = Integer.parseInt(data3[0]);
+			s.height = Integer.parseInt(data3[1]);
+			s.depth = Integer.parseInt(data3[2]);
+		}
+		catch(NumberFormatException e)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Bad size.");
+			return;
+		}
+		if(s.width < 1 || s.height < 1 || s.depth < 1)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Bad size.");
+			return;
+		}
+		s.structure = new int[s.width][s.height][s.depth];
+		data3 = data2[3].split("\\.");
+		if(data3.length < s.width*s.height*s.depth)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Bad structure data.");
+			return;
+		}
+		int pos = 0;
+		for(int x = 0; x < s.width; x++)
+		{
+			for(int y = 0; y < s.height; y++)
+			{
+				for(int z = 0; z < s.depth; z++)
+				{
+					try
+					{
+						s.structure[x][y][z] = Integer.parseInt(data3[pos++]);
+					}
+					catch(NumberFormatException e)
+					{
+						System.out.println("Invalid schematic: "+data);
+						System.out.println("Reason: Bad structure data.");
+						return;
+					}
+				}
+			}
+		}
+		data3 = data2[0].split("\\.");
+		try
+		{
+			s.weight = Integer.parseInt(data3[0]);
+			s.offset = Integer.parseInt(data3[1]);
+		}
+		catch(NumberFormatException e)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Bad initial data.");
+			return;
+		}
+		catch(IndexOutOfBoundsException e)
+		{
+			System.out.println("Invalid schematic: "+data);
+			System.out.println("Reason: Bad initial data.");
+			return;
+		}
+		if(schematics == null) schematics = new ArrayList<Schematic>();
+		schematics.add(s);
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void sendChunkToClient(Chunk chunk, Player player)
 	{
@@ -877,6 +985,18 @@ public class IslePopulator extends BlockPopulator
 	
 	private void createVillage(World world, int islandX, int islandY, int islandZ, int[][] tileData, float heightMult, Random rand)
 	{
+		if(schematics == null)
+		{
+			System.out.println("Tried to create village without loaded schematics!");
+			return;
+		}
+		System.out.println("Placing village at: "+islandX+","+islandY+","+islandZ);
+		int totalWeight = 0;
+		int size = schematics.size();
+		for(int a = 0; a < size; a++)
+		{
+			totalWeight += schematics.get(a).weight;
+		}
 		ArrayList<int[]> positions = new ArrayList<int[]>();
 		positions.add(new int[]{tileData.length/2, tileData[0].length/2});
 		while(positions.size() > 0)
@@ -893,31 +1013,53 @@ public class IslePopulator extends BlockPopulator
 				continue;
 			}
 			int zPos = position[1]+islandZ;
-			//TODO: select house and get size of it
-			int width = 4, height = 9, depth = 4;
-			
+			int schematicWeightVal = rand.nextInt(totalWeight);
+			Schematic s = null;
+			for(int a = 0; a < size; a++)
+			{
+				s = schematics.get(a);
+				schematicWeightVal -= s.weight;
+				if(schematicWeightVal < 0) break;
+			}
+			yPos += s.offset;
 			boolean found = false;
+			int left = s.width/2, right = (s.width-1)/2;
+			int back = s.depth/2, forward = (s.depth-1)/2;
+			int up = s.height-1;
 			for(int y1 = -2; y1 <= 2 && !found; y1++)
 			{
 				if(getBlock(world, xPos, yPos+y1, zPos) == Material.WOOD.getId()) found = true;
-				if(getBlock(world, xPos+width, yPos+y1, zPos+depth) == Material.WOOD.getId()) found = true;
-				if(getBlock(world, xPos-width, yPos+y1, zPos+depth) == Material.WOOD.getId()) found = true;
-				if(getBlock(world, xPos+width, yPos+y1, zPos-depth) == Material.WOOD.getId()) found = true;
-				if(getBlock(world, xPos-width, yPos+y1, zPos-depth) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos+right, yPos+y1, zPos+back) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos-left, yPos+y1, zPos+back) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos+right, yPos+y1, zPos-forward) == Material.WOOD.getId()) found = true;
+				if(getBlock(world, xPos-left, yPos+y1, zPos-forward) == Material.WOOD.getId()) found = true;
 			}
 			if(found) continue;
-			if(getBlock(world, xPos, yPos+height+2, zPos) != 0) continue;
-			if(getBlock(world, xPos+width, yPos+height+2, zPos+depth) != 0) continue;
-			if(getBlock(world, xPos-width, yPos+height+2, zPos+depth) != 0) continue;
-			if(getBlock(world, xPos+width, yPos+height+2, zPos-depth) != 0) continue;
-			if(getBlock(world, xPos-width, yPos+height+2, zPos-depth) != 0) continue;
-			//TODO: place house
-			/*
-			positions.add(new int[]{xPos+7+rand.nextInt(4), zPos+7+rand.nextInt(4)});
-			positions.add(new int[]{xPos-7-rand.nextInt(4), zPos+7+rand.nextInt(4)});
-			positions.add(new int[]{xPos+7+rand.nextInt(4), zPos-7-rand.nextInt(4)});
-			positions.add(new int[]{xPos-7-rand.nextInt(4), zPos-7-rand.nextInt(4)});
-			*/
+			if(getBlock(world, xPos, yPos+up+2, zPos) != 0) continue;
+			if(getBlock(world, xPos+right, yPos+up+2, zPos+back) != 0) continue;
+			if(getBlock(world, xPos-left, yPos+up+2, zPos+back) != 0) continue;
+			if(getBlock(world, xPos+right, yPos+up+2, zPos-forward) != 0) continue;
+			if(getBlock(world, xPos-left, yPos+up+2, zPos-forward) != 0) continue;
+			if(getBlock(world, xPos, yPos-1, zPos) == 0) continue;
+			if(getBlock(world, xPos+right, yPos-1, zPos+back) == 0) continue;
+			if(getBlock(world, xPos-left, yPos-1, zPos+back) == 0) continue;
+			if(getBlock(world, xPos+right, yPos-1, zPos-forward) == 0) continue;
+			if(getBlock(world, xPos-left, yPos-1, zPos-forward) == 0) continue;
+			for(int x2 = 0; x2 <= left+right; x2++)
+			{
+				for(int z2 = 0; z2 <= back+forward; z2++)
+				{
+					for(int y2 = 0; y2 <= up; y2++)
+					{
+						int dataID = s.structure[x2][y2][z2];
+						if(dataID != -1) setBlockWithData(world, xPos+x2-left, yPos+y2, zPos+z2-forward, s.materialList[dataID], s.materialListData[dataID]);
+					}
+				}
+			}
+			positions.add(new int[]{position[0]+right+2+rand.nextInt(4), position[1]-2-forward-rand.nextInt(4)});
+			positions.add(new int[]{position[0]-2-left-rand.nextInt(4), position[1]-2-forward-rand.nextInt(4)});
+			positions.add(new int[]{position[0]+2+right+rand.nextInt(4), position[1]+2+back+rand.nextInt(4)});
+			positions.add(new int[]{position[0]-2-left-rand.nextInt(4), position[1]+2+back+rand.nextInt(4)});
 		}
 	}
 	
@@ -948,7 +1090,7 @@ public class IslePopulator extends BlockPopulator
 						   zPos == position[2]-4 || zPos == position[2]+4)
 						{
 							setAirIfAllowed(world, xPos, yPos, zPos, true);
-							setBlockIfAlreadyAir(world, xPos, yPos, zPos, (yPos == position[1] && rand.nextBoolean())?Material.MOSSY_COBBLESTONE.getId():Material.COBBLESTONE.getId());
+							setBlockIfAlreadyAir(world, xPos, yPos, zPos, rand.nextBoolean()?Material.MOSSY_COBBLESTONE.getId():Material.COBBLESTONE.getId());
 						}
 						else setAirIfAllowed(world, xPos, yPos, zPos, true);
 					}
@@ -1086,7 +1228,12 @@ public class IslePopulator extends BlockPopulator
 		{
 			int val = rand.nextInt(1000);
 			ItemStack stack = null;
-			if(val < 400)
+			if(val < 200)
+			{
+				int amount = 10+rand.nextInt(55);
+				stack = new ItemStack(Material.DIRT, amount);
+			}
+			else if(val < 400)
 			{
 				int amount = 2+rand.nextInt(4)+rand.nextInt(4);
 				stack = new ItemStack(Material.REDSTONE, amount);
@@ -1096,9 +1243,14 @@ public class IslePopulator extends BlockPopulator
 				int amount = 2+rand.nextInt(3);
 				stack = new ItemStack(Material.IRON_INGOT, amount);
 			}
-			else if(val < 700)
+			else if(val < 650)
 			{
 				stack = new ItemStack(Material.SADDLE);
+			}
+			else if(val < 700)
+			{
+				int amount = 2+rand.nextInt(7);
+				stack = new ItemStack(Material.BLAZE_ROD, amount);
 			}
 			else if(val < 800)
 			{
@@ -1108,7 +1260,7 @@ public class IslePopulator extends BlockPopulator
 			else if(val < 850)
 			{
 				int amount = 1+rand.nextInt(2);
-				stack = new ItemStack(Material.EYE_OF_ENDER, amount);
+				stack = new ItemStack(Material.ENDER_PEARL, amount);
 			}
 			else if(val < 900)
 			{
@@ -1162,6 +1314,7 @@ public class IslePopulator extends BlockPopulator
 		else if(randVal < 700) islandType = Biome.SWAMPLAND;
 		else if(randVal < 850) islandType = Biome.JUNGLE;
 		else if(randVal < 900) islandType = Biome.DESERT;
+		//else if(randVal < 946) islandType = Biome.SMALL_MOUNTAINS;
 		else if(randVal < 993) islandType = Biome.EXTREME_HILLS;
 		else islandType = Biome.MUSHROOM_ISLAND;
 		int size = rand.nextInt(141)+60;
@@ -1185,9 +1338,10 @@ public class IslePopulator extends BlockPopulator
 					int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
 					if(x == size/2 && z == size/2)
 					{
-						if(world.getSpawnLocation().getBlockY() < 80)
+						if(world.getSpawnLocation().getY()%1 == 0)
 						{
 							world.setSpawnLocation(startX+x, startY+upAmount+4, startZ+z);
+							world.getSpawnLocation().add(0.0, 0.1, 0.0);
 						}
 					}
 					int total = 0;
@@ -1427,11 +1581,11 @@ public class IslePopulator extends BlockPopulator
 		}
 		if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND)
 		{
-			if(rand.nextInt(50) == 7) generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, (5+rand.nextInt(21))*size*size/10000, rand);
+			if(rand.nextDouble() < IslandWorldGeneration.dungeonChance) generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, (5+rand.nextInt(21))*size*size/10000, rand);
 		}
 		if(flatIsland && islandType == Biome.PLAINS && rand.nextInt(3) == 1)
 		{
-			//createVillage(world, startX, startY, startZ, tileData, heightMult, rand);
+			createVillage(world, startX, startY, startZ, tileData, heightMult, rand);
 		}
 		while(chunksToReload.size() > 0)
 		{
