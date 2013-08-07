@@ -9,10 +9,18 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 {
 	public static int islandSpacing, islandStartY;
 	public static double[] rarityModifiers;
+	public static double dungeonChance;
+	
+	public static boolean enabled;
 	
 	@Override
 	public void onEnable()
 	{
+		enabled = true;
+		
+		IslePopulator.interpretSchematic("1.1=5.0=3.3.3=0.0.0.0.0.0.-1.0.-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.-1.0.-1");
+		IslePopulator.interpretSchematic("1.0=5.1=5.1.5=-1.-1.0.-1.-1.-1.0.0.0.-1.0.0.0.0.0.-1.0.0.0.-1.-1.-1.0.-1.-1");
+		
 		islandSpacing = getConfig().getInt("island.spacing", 8);
 		getConfig().set("island.spacing", islandSpacing);
 		islandStartY = getConfig().getInt("island.height", 150);
@@ -34,12 +42,21 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.fluidpool", rarityModifiers[6]);
 		rarityModifiers[7] = getConfig().getDouble("rarity.gravelpatch", 1);
 		getConfig().set("rarity.gravelpatch", rarityModifiers[7]);
+		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
+		getConfig().set("dungeonchance", dungeonChance);
 		saveConfig();
+	}
+	
+	@Override
+	public void onDisable()
+	{
+		enabled = false;
 	}
 	
 	@Override
 	public ChunkGenerator getDefaultWorldGenerator(String worldName, String id)
 	{
+		if(!enabled) getServer().getPluginManager().enablePlugin(this);
 		return new ChunkGen();
 	}
 }
