@@ -18,11 +18,13 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.craftbukkit.v1_6_R2.CraftChunk;
 import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
 @SuppressWarnings("deprecation")
 public class IslePopulator extends BlockPopulator
@@ -1175,24 +1177,24 @@ public class IslePopulator extends BlockPopulator
 				if(wallID == 0)
 				{
 					chestX = position[0]-3;
-					chestZ = position[2]-3+rand.nextInt(7);
+					chestZ = position[2]-2+rand.nextInt(5);
 					chestData = 5;
 				}
 				else if(wallID == 1)
 				{
 					chestX = position[0]+3;
-					chestZ = position[2]-3+rand.nextInt(7);
+					chestZ = position[2]-2+rand.nextInt(5);
 					chestData = 4;
 				}
 				else if(wallID == 2)
 				{
-					chestX = position[0]-3+rand.nextInt(7);
+					chestX = position[0]-2+rand.nextInt(5);
 					chestZ = position[2]-3;
 					chestData = 3;
 				}
 				else if(wallID == 3)
 				{
-					chestX = position[0]-3+rand.nextInt(7);
+					chestX = position[0]-2+rand.nextInt(5);
 					chestZ = position[2]+3;
 					chestData = 2;
 				}
@@ -1271,6 +1273,14 @@ public class IslePopulator extends BlockPopulator
 			{
 				int amount = 1+rand.nextInt(10);
 				stack = new ItemStack(Material.SLIME_BALL, amount);
+			}
+			else if(val < 960)
+			{
+				stack = new ItemStack(Material.ENCHANTED_BOOK);
+				EnchantmentStorageMeta meta = (EnchantmentStorageMeta)stack.getItemMeta();
+				Enchantment e = Enchantment.values()[rand.nextInt(Enchantment.values().length)];
+				meta.addStoredEnchant(e, rand.nextInt(e.getMaxLevel())+1, false);
+				stack.setItemMeta(meta);
 			}
 			else
 			{
