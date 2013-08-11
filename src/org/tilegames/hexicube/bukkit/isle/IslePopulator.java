@@ -1502,14 +1502,7 @@ public class IslePopulator extends BlockPopulator
 						else if(islandType == Biome.SMALL_MOUNTAINS)
 						{
 							if(getBlock(world, blockX, blockY, blockZ) != Material.ENDER_PORTAL_FRAME.getId())
-							{
-								if(distFromTop == 0 && rand.nextInt(50) == 15)
-								{
-									setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
-									((CreatureSpawner)world.getBlockAt(blockX, blockY, blockZ).getState()).setCreatureType(CreatureType.ENDERMAN);
-								}
-								else setBlock(world, blockX, blockY, blockZ, Material.ENDER_STONE.getId());
-							}
+								setBlock(world, blockX, blockY, blockZ, Material.ENDER_STONE.getId());
 							if(distFromTop == 0)
 							{
 								if(rand.nextInt(10000) == 151)
