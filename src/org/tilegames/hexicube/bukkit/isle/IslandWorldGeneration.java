@@ -25,7 +25,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("island.spacing", islandSpacing);
 		islandStartY = getConfig().getInt("island.height", 150);
 		getConfig().set("island.height", islandStartY);
-		rarityModifiers = new double[9];
+		rarityModifiers = new double[10];
 		rarityModifiers[0] = getConfig().getDouble("rarity.coalore", 1);
 		getConfig().set("rarity.coalore", rarityModifiers[0]);
 		rarityModifiers[1] = getConfig().getDouble("rarity.ironore", 1);
@@ -44,6 +44,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.gravelpatch", rarityModifiers[7]);
 		rarityModifiers[8] = getConfig().getDouble("rarity.caves", 1);
 		getConfig().set("rarity.caves", rarityModifiers[8]);
+		rarityModifiers[9] = getConfig().getDouble("rarity.quartzore", 1);
+		getConfig().set("rarity.quartzore", rarityModifiers[9]);
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
 		saveConfig();
