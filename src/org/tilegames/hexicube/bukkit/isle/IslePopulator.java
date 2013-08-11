@@ -160,11 +160,11 @@ public class IslePopulator extends BlockPopulator
 	
 	private int[][] genIslandData(int size, Random rand)
 	{
-		int tileSize = 10;
+		int tileSize = 6+rand.nextInt(5);
 		int[][] tileData = new int[size][size];
 		int subsize = size*tileSize;
 		int radiusSteps = Math.min(subsize, subsize)/15;
-		byte[][] data = new byte[subsize][subsize];
+		int[][] data = new int[subsize][subsize];
 		ArrayList<int[]> steps = new ArrayList<int[]>();
 		steps.add(new int[]{(int)(subsize*0.5), (int)(subsize*0.5), radiusSteps*5});
 		while(steps.size() > 0)
@@ -172,27 +172,32 @@ public class IslePopulator extends BlockPopulator
 			int[] step = steps.remove(0);
 			if(step[2] > radiusSteps)
 			{
+				double mult = 0.85+rand.nextDouble()*0.25;
+				mult *= 1-((double)step[2]/(double)(radiusSteps*5))/4;
+				if(rand.nextInt(7) == 1) mult *= step[2]/radiusSteps;
+				int stepSqrd = step[2]*step[2];
 				for(int x = 0; x < step[2]; x++)
 				{
 					for(int y = 0; y < step[2]; y++)
 					{
 						double distSqrd = (step[2]*0.5-x)*(step[2]*0.5-x)+(step[2]*0.5-y)*(step[2]*0.5-y);
-						if(distSqrd < step[2]*step[2]*0.25)
+						if(distSqrd < stepSqrd*0.25)
 						{
-							double strength = (1.0-distSqrd/(step[2]*step[2])*4)*((step[2]==radiusSteps*5)?0.1:0.065);
-							int xPos = (int)(x+step[0]-step[2]*0.5), yPos = (int)(y+step[1]-step[2]*0.5);
+							double strength = (1.0-distSqrd/stepSqrd*4)*((step[2]==radiusSteps*5)?0.1:0.065)*mult;
+							int xPos = (int)(x+step[0]-step[2]*0.5);
+							int yPos = (int)(y+step[1]-step[2]*0.5);
 							int val = data[xPos][yPos];
-							if(val < 0) val += 256;
 							val += strength*255;
-							if(val > 255) val = 255;
-							data[xPos][yPos] = (byte)val;
+							if(val > 2500) val = 2500;
+							data[xPos][yPos] = val;
 						}
 					}
 				}
-				for(int a = 0; a < 6; a++)
+				int factor = 4+rand.nextInt(5);
+				for(int a = 0; a < factor; a++)
 				{
 					double angle = (double)rand.nextInt(360)/180*Math.PI;
-					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-radiusSteps});
+					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-(int)(radiusSteps*(1+rand.nextDouble()*0.2))});
 				}
 			}
 		}
@@ -206,7 +211,6 @@ public class IslePopulator extends BlockPopulator
 					for(int y2 = 0; y2 < tileSize; y2++)
 					{
 						int val = data[x*tileSize+x2][y*tileSize+y2];
-						if(val < 0) val += 256;
 						strength += (float)val/(float)(tileSize*tileSize);
 					}
 				}
@@ -1379,12 +1383,7 @@ public class IslePopulator extends BlockPopulator
 		   (Math.abs(chunk.getX())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing || Math.abs(chunk.getZ())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing)) return;
 		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R2.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
-		boolean gravel = false;
-		if(sandEdges)
-		{
-			gravel = rand.nextInt(12) < 3;
-		}
-		boolean flatIsland = rand.nextInt(12) < 5;
+		boolean flatIsland = rand.nextInt(17) < 5;
 		Biome islandType;
 		int randVal = rand.nextInt(1000);
 		if(randVal < 200) islandType = Biome.PLAINS;
@@ -1443,7 +1442,7 @@ public class IslePopulator extends BlockPopulator
 						int blockX = startX+x, blockY = startY+y, blockZ = startZ+z;
 						int distFromTop = upAmount-y;
 						int distFromBottom = downAmount+y;
-						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextInt(60000) == 20747)
+						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextDouble() < 0.000015*IslandWorldGeneration.rarityModifiers[8])
 						{
 							points.add(new int[]{blockX, blockY, blockZ});
 						}
@@ -1496,8 +1495,8 @@ public class IslePopulator extends BlockPopulator
 						{
 							if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
 							{
-								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, gravel?Material.COBBLESTONE.getId():Material.SANDSTONE.getId());
-								else setBlock(world, blockX, blockY, blockZ, gravel?Material.GRAVEL.getId():Material.SAND.getId());
+								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
 							}
 							else if(distFromTop == 0)
 							{
@@ -1509,12 +1508,7 @@ public class IslePopulator extends BlockPopulator
 						}
 						else if(islandType == Biome.TAIGA)
 						{
-							/*if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
-							{
-								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, gravel?Material.COBBLESTONE.getId():Material.SANDSTONE.getId());
-								else setBlock(world, blockX, blockY, blockZ, gravel?Material.GRAVEL.getId():Material.SAND.getId());
-							}
-							else */if(distFromTop == 0)
+							if(distFromTop == 0)
 							{
 								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 								if(rand.nextInt(120) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
@@ -1534,12 +1528,7 @@ public class IslePopulator extends BlockPopulator
 						}
 						else if(islandType == Biome.JUNGLE)
 						{
-							/*if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
-							{
-								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, gravel?Material.COBBLESTONE.getId():Material.SANDSTONE.getId());
-								else setBlock(world, blockX, blockY, blockZ, gravel?Material.GRAVEL.getId():Material.SAND.getId());
-							}
-							else */if(distFromTop == 0)
+							if(distFromTop == 0)
 							{
 								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 								if(rand.nextInt(40) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);

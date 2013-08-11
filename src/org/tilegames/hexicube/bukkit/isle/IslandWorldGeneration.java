@@ -18,14 +18,14 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	{
 		enabled = true;
 		
-		IslePopulator.interpretSchematic("1.1=5.0=3.3.3=0.0.0.0.0.0.-1.0.-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.-1.0.-1");
-		IslePopulator.interpretSchematic("1.0=5.1=5.1.5=-1.-1.0.-1.-1.-1.0.0.0.-1.0.0.0.0.0.-1.0.0.0.-1.-1.-1.0.-1.-1");
+		//IslePopulator.interpretSchematic("1.1=5.0=3.3.3=0.0.0.0.0.0.-1.0.-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.-1.0.-1");
+		//IslePopulator.interpretSchematic("1.0=5.1=5.1.5=-1.-1.0.-1.-1.-1.0.0.0.-1.0.0.0.0.0.-1.0.0.0.-1.-1.-1.0.-1.-1");
 		
 		islandSpacing = getConfig().getInt("island.spacing", 8);
 		getConfig().set("island.spacing", islandSpacing);
 		islandStartY = getConfig().getInt("island.height", 150);
 		getConfig().set("island.height", islandStartY);
-		rarityModifiers = new double[8];
+		rarityModifiers = new double[9];
 		rarityModifiers[0] = getConfig().getDouble("rarity.coalore", 1);
 		getConfig().set("rarity.coalore", rarityModifiers[0]);
 		rarityModifiers[1] = getConfig().getDouble("rarity.ironore", 1);
@@ -42,6 +42,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.fluidpool", rarityModifiers[6]);
 		rarityModifiers[7] = getConfig().getDouble("rarity.gravelpatch", 1);
 		getConfig().set("rarity.gravelpatch", rarityModifiers[7]);
+		rarityModifiers[8] = getConfig().getDouble("rarity.caves", 1);
+		getConfig().set("rarity.caves", rarityModifiers[8]);
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
 		saveConfig();
