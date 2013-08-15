@@ -9,9 +9,13 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 {
 	public static int islandSpacing, islandStartY;
 	public static double[] rarityModifiers;
+	public static int[] islandChances;
+	public static int islandTotalChance;
 	public static double dungeonChance;
 	
 	public static boolean enabled;
+	
+	public static boolean spawnVerified = false;
 	
 	@Override
 	public void onEnable()
@@ -46,8 +50,35 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.caves", rarityModifiers[8]);
 		rarityModifiers[9] = getConfig().getDouble("rarity.quartzore", 1);
 		getConfig().set("rarity.quartzore", rarityModifiers[9]);
+		
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
+		
+		islandChances = new int[9];
+		islandChances[0] = getConfig().getInt("islandchance.plains", 4);
+		getConfig().set("islandchance.plains", islandChances[0]);
+		islandChances[1] = getConfig().getInt("islandchance.forest", 8);
+		getConfig().set("islandchance.forest", islandChances[1]);
+		islandChances[2] = getConfig().getInt("islandchance.taiga", 6);
+		getConfig().set("islandchance.taiga", islandChances[2]);
+		islandChances[3] = getConfig().getInt("islandchance.swamp", 3);
+		getConfig().set("islandchance.swamp", islandChances[3]);
+		islandChances[4] = getConfig().getInt("islandchance.jungle", 4);
+		getConfig().set("islandchance.jungle", islandChances[4]);
+		islandChances[5] = getConfig().getInt("islandchance.desert", 4);
+		getConfig().set("islandchance.desert", islandChances[5]);
+		islandChances[6] = getConfig().getInt("islandchance.nether", 1);
+		getConfig().set("islandchance.nether", islandChances[6]);
+		islandChances[7] = getConfig().getInt("islandchance.ender", 1);
+		getConfig().set("islandchance.ender", islandChances[7]);
+		islandChances[8] = getConfig().getInt("islandchance.mushroom", 1);
+		getConfig().set("islandchance.mushroom", islandChances[8]);
+		islandTotalChance = 0;
+		for(int a = 0; a < islandChances.length; a++)
+		{
+			if(islandChances[a] < 0) islandChances[a] = 0;
+			islandTotalChance += islandChances[a];
+		}
 		saveConfig();
 	}
 	

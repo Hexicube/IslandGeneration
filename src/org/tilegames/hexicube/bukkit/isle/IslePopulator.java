@@ -11,6 +11,7 @@ import net.minecraft.server.v1_6_R2.ChunkSection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
@@ -1394,16 +1395,26 @@ public class IslePopulator extends BlockPopulator
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean flatIsland = rand.nextInt(17) < 5;
 		Biome islandType;
-		int randVal = rand.nextInt(1000);
-		if(randVal < 200) islandType = Biome.PLAINS;
-		else if(randVal < 400) islandType = Biome.FOREST;
-		else if(randVal < 550) islandType = Biome.TAIGA;
-		else if(randVal < 700) islandType = Biome.SWAMPLAND;
-		else if(randVal < 850) islandType = Biome.JUNGLE;
-		else if(randVal < 900) islandType = Biome.DESERT;
-		else if(randVal < 946) islandType = Biome.SMALL_MOUNTAINS;
-		else if(randVal < 993) islandType = Biome.EXTREME_HILLS;
-		else islandType = Biome.MUSHROOM_ISLAND;
+		if(IslandWorldGeneration.islandTotalChance == 0) islandType = Biome.FOREST;
+		else
+		{
+			int randVal = rand.nextInt(IslandWorldGeneration.islandTotalChance);
+			int pos = 0;
+			while(randVal >= IslandWorldGeneration.islandChances[pos])
+			{
+				randVal -= IslandWorldGeneration.islandChances[pos];
+				pos++;
+			}
+			if(pos == 0) islandType = Biome.PLAINS;
+			else if(pos == 1) islandType = Biome.FOREST;
+			else if(pos == 2) islandType = Biome.TAIGA;
+			else if(pos == 3) islandType = Biome.SWAMPLAND;
+			else if(pos == 4) islandType = Biome.JUNGLE;
+			else if(pos == 5) islandType = Biome.DESERT;
+			else if(pos == 6) islandType = Biome.EXTREME_HILLS;
+			else if(pos == 7) islandType = Biome.SMALL_MOUNTAINS;
+			else islandType = Biome.MUSHROOM_ISLAND;
+		}
 		int size = rand.nextInt(111)+70;
 		float heightMult = rand.nextFloat()/2.0f+0.75f;
 		int[][] tileData = genIslandData(size, rand);
@@ -1424,14 +1435,6 @@ public class IslePopulator extends BlockPopulator
 					world.setBiome(startX+x, startZ+z, islandType);
 					//int upAmount = (int)(tileData[x][z]*size*heightMult/(flatIsland?12000:2000));
 					int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
-					/*if(x == size/2 && z == size/2)
-					{
-						if(world.getSpawnLocation().getY()%1 == 0)
-						{
-							world.setSpawnLocation(startX+x, startY+upAmount+4, startZ+z);
-							world.getSpawnLocation().add(0.0, 0.1, 0.0);
-						}
-					}*/
 					int total = 0;
 					for(int x2 = -4; x2 <= 4; x2++)
 					{
@@ -1447,9 +1450,10 @@ public class IslePopulator extends BlockPopulator
 					total /= 49;
 					int downAmount = (int) (total*size*heightMult/3000+1);
 					int thickness = downAmount+upAmount+1;
+					int blockX = startX+x, blockZ = startZ+z;
 					for(int y = -downAmount; y <= upAmount; y++)
 					{
-						int blockX = startX+x, blockY = startY+y, blockZ = startZ+z;
+						int blockY = startY+y;
 						int distFromTop = upAmount-y;
 						int distFromBottom = downAmount+y;
 						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextDouble() < 0.000015*IslandWorldGeneration.rarityModifiers[8])
@@ -1678,6 +1682,21 @@ public class IslePopulator extends BlockPopulator
 							{
 								orePoints.add(new int[]{blockX, blockY, blockZ, 6});
 							}
+						}
+					}
+					if(!IslandWorldGeneration.spawnVerified && x == size/2 && z == size/2)
+					{
+						if(islandType == Biome.FOREST || islandType == Biome.TAIGA || islandType == Biome.SWAMPLAND || islandType == Biome.JUNGLE)
+						{
+							Location loc = world.getSpawnLocation();
+							Chunk chu = world.getChunkAt(loc);
+							if(!world.isChunkLoaded(chu)) world.loadChunk(chu);
+							int spawnY = world.getHighestBlockYAt(loc);
+							if(spawnY < loc.getBlockY()-3)
+							{
+								world.setSpawnLocation(blockX, upAmount+1, blockZ);
+							}
+							IslandWorldGeneration.spawnVerified = true;
 						}
 					}
 				}
