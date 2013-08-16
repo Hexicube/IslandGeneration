@@ -22,23 +22,12 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	
 	public static boolean spawnVerified = false;
 	
-	private static int taskID;
+	private static int taskID, taskRepeatTimer;
 	
 	@SuppressWarnings("deprecation")
 	@Override
 	public void onEnable()
 	{
-		try
-		{
-			UpdateChecker c = new UpdateChecker(this, getDescription().getVersion(), "http://dev.bukkit.org/bukkit-plugins/floating-island-world-generation/files.rss");
-			taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, c, 0, 20*60*15);
-		}
-		catch (MalformedURLException e)
-		{
-			e.printStackTrace();
-			getLogger().severe("Error with starting update checker, disabling!");
-		}
-		
 		enabled = true;
 		
 		//IslePopulator.interpretSchematic("1.1=5.0=3.3.3=0.0.0.0.0.0.-1.0.-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.-1.0.-1");
@@ -98,13 +87,27 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 			if(islandChances[a] < 0) islandChances[a] = 0;
 			islandTotalChance += islandChances[a];
 		}
+		taskRepeatTimer = getConfig().getInt("minutes_between_update_checks", 15);
+		getConfig().set("minutes_between_update_checks", taskRepeatTimer);
 		saveConfig();
+		
+		try
+		{
+			UpdateChecker c = new UpdateChecker(this, getDescription().getVersion(), "http://dev.bukkit.org/bukkit-plugins/floating-island-world-generation/files.rss");
+			if(taskRepeatTimer > 0) taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, c, 0, 20*60*taskRepeatTimer);
+			else c.run();
+		}
+		catch (MalformedURLException e)
+		{
+			e.printStackTrace();
+			getLogger().severe("Error with starting update checker, disabling!");
+		}
 	}
 	
 	@Override
 	public void onDisable()
 	{
-		getServer().getScheduler().cancelTask(taskID);
+		if(taskRepeatTimer > 0) getServer().getScheduler().cancelTask(taskID);
 		enabled = false;
 	}
 	
