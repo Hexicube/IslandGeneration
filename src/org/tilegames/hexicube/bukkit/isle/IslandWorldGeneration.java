@@ -129,13 +129,14 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 				{
 					sender.sendMessage("[IsleWorldGen] Island starting height: "+islandStartY);
 					sender.sendMessage("[IsleWorldGen] Island spacing: "+islandSpacing);
-					sender.sendMessage("[IsleWorldGen] Chance of dungeon per island: "+dungeonChance*100+"%");
+					sender.sendMessage("[IsleWorldGen] Minutes between update checks: "+((taskRepeatTimer>0)?taskRepeatTimer:"Disabled"));
 					sender.sendMessage("[IsleWorldGen] Type \"/islegen chancemod\" for rarity modifiers.");
 					sender.sendMessage("[IsleWorldGen] Type \"/islegen islechance\" for island type chances.");
 					if(sender.isOp()) sender.sendMessage("[IsleWorldGen] Type \"/islegen checkver\" to check for updates.");
 				}
 				else if(args[0].equalsIgnoreCase("chancemod"))
 				{
+					sender.sendMessage("[IsleWorldGen] Chance of dungeon per island: "+dungeonChance*100+"%");
 					sender.sendMessage("[IsleWorldGen] Chances modifiers:");
 					sender.sendMessage("[IsleWorldGen]   Coal ore: "+rarityModifiers[0]);
 					sender.sendMessage("[IsleWorldGen]   Iron ore: "+rarityModifiers[1]);
