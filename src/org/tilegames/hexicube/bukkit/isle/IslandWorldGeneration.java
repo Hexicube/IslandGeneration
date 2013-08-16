@@ -1,7 +1,12 @@
 package org.tilegames.hexicube.bukkit.isle;
 
+import java.net.MalformedURLException;
+
 import org.bukkit.plugin.java.JavaPlugin;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.generator.ChunkGenerator;
 
@@ -17,9 +22,23 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	
 	public static boolean spawnVerified = false;
 	
+	private static int taskID;
+	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onEnable()
 	{
+		try
+		{
+			UpdateChecker c = new UpdateChecker(this, getDescription().getVersion(), "http://dev.bukkit.org/bukkit-plugins/floating-island-world-generation/files.rss");
+			taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, c, 0, 20*60*15);
+		}
+		catch (MalformedURLException e)
+		{
+			e.printStackTrace();
+			getLogger().severe("Error with starting update checker, disabling!");
+		}
+		
 		enabled = true;
 		
 		//IslePopulator.interpretSchematic("1.1=5.0=3.3.3=0.0.0.0.0.0.-1.0.-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.-1.0.-1");
@@ -85,6 +104,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	@Override
 	public void onDisable()
 	{
+		getServer().getScheduler().cancelTask(taskID);
 		enabled = false;
 	}
 	
@@ -93,5 +113,87 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	{
 		if(!enabled) getServer().getPluginManager().enablePlugin(this);
 		return new ChunkGen();
+	}
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
+	{
+		if(cmd.getName().equalsIgnoreCase("islegen"))
+		{
+			if(args.length > 0)
+			{
+				if(args[0].equalsIgnoreCase("data"))
+				{
+					sender.sendMessage("[IsleWorldGen] Island starting height: "+islandStartY);
+					sender.sendMessage("[IsleWorldGen] Island spacing: "+islandSpacing);
+					sender.sendMessage("[IsleWorldGen] Chance of dungeon per island: "+dungeonChance*100+"%");
+					sender.sendMessage("[IsleWorldGen] Type \"/islegen chancemod\" for rarity modifiers.");
+					sender.sendMessage("[IsleWorldGen] Type \"/islegen islechance\" for island type chances.");
+					if(sender.isOp()) sender.sendMessage("[IsleWorldGen] Type \"/islegen checkver\" to check for updates.");
+				}
+				else if(args[0].equalsIgnoreCase("chancemod"))
+				{
+					sender.sendMessage("[IsleWorldGen] Chances modifiers:");
+					sender.sendMessage("[IsleWorldGen]   Coal ore: "+rarityModifiers[0]);
+					sender.sendMessage("[IsleWorldGen]   Iron ore: "+rarityModifiers[1]);
+					sender.sendMessage("[IsleWorldGen]   Gold ore: "+rarityModifiers[2]);
+					sender.sendMessage("[IsleWorldGen]   Redstone ore: "+rarityModifiers[3]);
+					sender.sendMessage("[IsleWorldGen]   Diamond ore: "+rarityModifiers[4]);
+					sender.sendMessage("[IsleWorldGen]   Emerald ore: "+rarityModifiers[5]);
+					sender.sendMessage("[IsleWorldGen]   Quartz ore: "+rarityModifiers[9]);
+					sender.sendMessage("[IsleWorldGen]   Water/Lava pools: "+rarityModifiers[6]);
+					sender.sendMessage("[IsleWorldGen]   Gravel patches: "+rarityModifiers[7]);
+					sender.sendMessage("[IsleWorldGen]   Caves: "+rarityModifiers[8]);
+				}
+				else if(args[0].equalsIgnoreCase("islechance"))
+				{
+					sender.sendMessage("[IsleWorldGen] Island chances:");
+					if(islandTotalChance == 0)
+					{
+						sender.sendMessage("[IsleWorldGen]   Forest: 1 (100.0%)");
+					}
+					else
+					{
+						if(islandChances[0] > 0) sender.sendMessage("[IsleWorldGen]   Plains: "+islandChances[0]+" ("+((double)islandChances[0]*100/islandTotalChance)+"%)");
+						if(islandChances[1] > 0) sender.sendMessage("[IsleWorldGen]   Forest: "+islandChances[1]+" ("+((double)islandChances[1]*100/islandTotalChance)+"%)");
+						if(islandChances[2] > 0) sender.sendMessage("[IsleWorldGen]   Taiga: "+islandChances[2]+" ("+((double)islandChances[2]*100/islandTotalChance)+"%)");
+						if(islandChances[3] > 0) sender.sendMessage("[IsleWorldGen]   Swamp: "+islandChances[3]+" ("+((double)islandChances[3]*100/islandTotalChance)+"%)");
+						if(islandChances[4] > 0) sender.sendMessage("[IsleWorldGen]   Jungle: "+islandChances[4]+" ("+((double)islandChances[4]*100/islandTotalChance)+"%)");
+						if(islandChances[5] > 0) sender.sendMessage("[IsleWorldGen]   Desert: "+islandChances[5]+" ("+((double)islandChances[5]*100/islandTotalChance)+"%)");
+						if(islandChances[6] > 0) sender.sendMessage("[IsleWorldGen]   Nether: "+islandChances[6]+" ("+((double)islandChances[6]*100/islandTotalChance)+"%)");
+						if(islandChances[7] > 0) sender.sendMessage("[IsleWorldGen]   Ender: "+islandChances[7]+" ("+((double)islandChances[7]*100/islandTotalChance)+"%)");
+						if(islandChances[8] > 0) sender.sendMessage("[IsleWorldGen]   Mushroom: "+islandChances[8]+" ("+((double)islandChances[8]*100/islandTotalChance)+"%)");
+					}
+				}
+				else if(args[0].equalsIgnoreCase("checkver") && sender.isOp())
+				{
+					sender.sendMessage("[IsleWorldGen] Current version: "+getDescription().getVersion());
+					sender.sendMessage("[IsleWorldGen] Latest version: "+UpdateChecker.latestVer);
+					if(UpdateChecker.outdated) sender.sendMessage("[IsleWorldGen] Link: "+UpdateChecker.latestLink);
+					else sender.sendMessage("[IsleWorldGen] The plugin is up to date.");
+				}
+				else
+				{
+					sender.sendMessage("[IsleWorldGen] Island World Generation V"+getDescription().getVersion());
+					sender.sendMessage("[IsleWorldGen] Type \"/islegen data\" for information on the current settings.");
+				}
+			}
+			else
+			{
+				sender.sendMessage("[IsleWorldGen] Island World Generation V"+getDescription().getVersion());
+				sender.sendMessage("[IsleWorldGen] Type \"/islegen data\" for information on the current settings.");
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public void tellOps(String string)
+	{
+		Player[] players = getServer().getOnlinePlayers();
+		for(int a = 0; a < players.length; a++)
+		{
+			if(players[a].isOp()) players[a].sendMessage(string);
+		}
 	}
 }
