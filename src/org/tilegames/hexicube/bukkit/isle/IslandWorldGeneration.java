@@ -37,7 +37,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("island.spacing", islandSpacing);
 		islandStartY = getConfig().getInt("island.height", 150);
 		getConfig().set("island.height", islandStartY);
-		rarityModifiers = new double[10];
+		rarityModifiers = new double[12];
 		rarityModifiers[0] = getConfig().getDouble("rarity.coalore", 1);
 		getConfig().set("rarity.coalore", rarityModifiers[0]);
 		rarityModifiers[1] = getConfig().getDouble("rarity.ironore", 1);
@@ -58,11 +58,15 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.caves", rarityModifiers[8]);
 		rarityModifiers[9] = getConfig().getDouble("rarity.quartzore", 1);
 		getConfig().set("rarity.quartzore", rarityModifiers[9]);
+		rarityModifiers[10] = getConfig().getDouble("rarity.clay", 1);
+		getConfig().set("rarity.clay", rarityModifiers[10]);
+		rarityModifiers[11] = getConfig().getDouble("rarity.sugarcane", 1);
+		getConfig().set("rarity.sugarcane", rarityModifiers[11]);
 		
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
 		
-		islandChances = new int[9];
+		islandChances = new int[10];
 		islandChances[0] = getConfig().getInt("islandchance.plains", 4);
 		getConfig().set("islandchance.plains", islandChances[0]);
 		islandChances[1] = getConfig().getInt("islandchance.forest", 8);
@@ -81,6 +85,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("islandchance.ender", islandChances[7]);
 		islandChances[8] = getConfig().getInt("islandchance.mushroom", 1);
 		getConfig().set("islandchance.mushroom", islandChances[8]);
+		islandChances[9] = getConfig().getInt("islandchance.lake", 4);
+		getConfig().set("islandchance.lake", islandChances[9]);
 		islandTotalChance = 0;
 		for(int a = 0; a < islandChances.length; a++)
 		{
@@ -145,6 +151,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					sender.sendMessage("[IsleWorldGen]   Diamond ore: "+rarityModifiers[4]);
 					sender.sendMessage("[IsleWorldGen]   Emerald ore: "+rarityModifiers[5]);
 					sender.sendMessage("[IsleWorldGen]   Quartz ore: "+rarityModifiers[9]);
+					sender.sendMessage("[IsleWorldGen]   Clay patches (lakes): "+rarityModifiers[10]);
+					sender.sendMessage("[IsleWorldGen]   Sugar cane (lakes): "+rarityModifiers[11]);
 					sender.sendMessage("[IsleWorldGen]   Water/Lava pools: "+rarityModifiers[6]);
 					sender.sendMessage("[IsleWorldGen]   Gravel patches: "+rarityModifiers[7]);
 					sender.sendMessage("[IsleWorldGen]   Caves: "+rarityModifiers[8]);
@@ -167,6 +175,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 						if(islandChances[6] > 0) sender.sendMessage("[IsleWorldGen]   Nether: "+islandChances[6]+" ("+((double)islandChances[6]*100/islandTotalChance)+"%)");
 						if(islandChances[7] > 0) sender.sendMessage("[IsleWorldGen]   Ender: "+islandChances[7]+" ("+((double)islandChances[7]*100/islandTotalChance)+"%)");
 						if(islandChances[8] > 0) sender.sendMessage("[IsleWorldGen]   Mushroom: "+islandChances[8]+" ("+((double)islandChances[8]*100/islandTotalChance)+"%)");
+						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   Ocean: "+islandChances[9]+" ("+((double)islandChances[9]*100/islandTotalChance)+"%)");
 					}
 				}
 				else if(args[0].equalsIgnoreCase("checkver") && sender.isOp())

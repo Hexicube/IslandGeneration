@@ -1313,10 +1313,20 @@ public class IslePopulator extends BlockPopulator
 		{
 			int val = rand.nextInt(1000);
 			ItemStack stack = null;
-			if(val < 200)
+			if(val < 66)
 			{
-				int amount = 10+rand.nextInt(55);
-				stack = new ItemStack(Material.DIRT, amount);
+				int amount = 5+rand.nextInt(16);
+				stack = new ItemStack(Material.MELON_SEEDS, amount);
+			}
+			else if(val < 134)
+			{
+				int amount = 5+rand.nextInt(16);
+				stack = new ItemStack(Material.PUMPKIN_SEEDS, amount);
+			}
+			else if(val < 200)
+			{
+				int amount = 5+rand.nextInt(16);
+				stack = new ItemStack(Material.SUGAR_CANE, amount);
 			}
 			else if(val < 400)
 			{
@@ -1413,10 +1423,16 @@ public class IslePopulator extends BlockPopulator
 			else if(pos == 5) islandType = Biome.DESERT;
 			else if(pos == 6) islandType = Biome.EXTREME_HILLS;
 			else if(pos == 7) islandType = Biome.SMALL_MOUNTAINS;
-			else islandType = Biome.MUSHROOM_ISLAND;
+			else if(pos == 8) islandType = Biome.MUSHROOM_ISLAND;
+			else islandType = Biome.OCEAN;
 		}
 		int size = rand.nextInt(111)+70;
 		float heightMult = rand.nextFloat()/2.0f+0.75f;
+		if(islandType == Biome.OCEAN)
+		{
+			if(heightMult < 1) heightMult *= 1.5f;
+			if(size < 140) size = 140;
+		}
 		int[][] tileData = genIslandData(size, rand);
 		int startX = chunk.getX()*16+8 - size/2;
 		int startY = IslandWorldGeneration.islandStartY+rand.nextInt(61);
@@ -1426,6 +1442,8 @@ public class IslePopulator extends BlockPopulator
 		ArrayList<int[]> gravelPoints = new ArrayList<int[]>();
 		ArrayList<int[]> poolPoints2 = new ArrayList<int[]>();
 		ArrayList<int[]> orePoints = new ArrayList<int[]>();
+		ArrayList<int[]> clayPatches = new ArrayList<int[]>();
+		ArrayList<int[]> sugarCane = new ArrayList<int[]>();
 		for(int x = 0; x < size; x++)
 		{
 			for(int z = 0; z < size; z++)
@@ -1433,40 +1451,153 @@ public class IslePopulator extends BlockPopulator
 				if(tileData[x][z] > 10)
 				{
 					world.setBiome(startX+x, startZ+z, islandType);
-					//int upAmount = (int)(tileData[x][z]*size*heightMult/(flatIsland?12000:2000));
-					int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
-					int total = 0;
-					for(int x2 = -4; x2 <= 4; x2++)
+					if(islandType == Biome.OCEAN)
 					{
-						for(int z2 = -4; z2 <= 4; z2++)
+						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/8));
+						upAmount = (int)((Math.sin(upAmount/77.12+Math.PI/2)*81-upAmount/5-60)*size*heightMult/1000);
+						int total = 0;
+						for(int x2 = -4; x2 <= 4; x2++)
 						{
-							try
+							for(int z2 = -4; z2 <= 4; z2++)
 							{
-								total += tileData[x+x2][z+z2];
+								try
+								{
+									total += tileData[x+x2][z+z2];
+								}
+								catch(IndexOutOfBoundsException e){}
 							}
-							catch(IndexOutOfBoundsException e){}
+						}
+						total /= 49;
+						int downAmount = (int) (total*size*heightMult/3000+1);
+						if(upAmount < -downAmount+3) upAmount = -downAmount+3;
+						int blockX = startX+x, blockZ = startZ+z;
+						for(int y = -downAmount; y <= upAmount; y++)
+						{
+							int distFromTop = upAmount-y;
+							int distFromBottom = downAmount+y;
+							int blockY = startY+y;
+							if(upAmount < 2)
+							{
+								if(distFromBottom > 0 && distFromTop < 3) setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
+								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
+								if(distFromTop == 0 && rand.nextDouble() < 0.01*IslandWorldGeneration.rarityModifiers[10]) clayPatches.add(new int[]{blockX, blockY, blockZ});
+								if(y == 0 && distFromTop == 0 && rand.nextDouble() < 0.1*IslandWorldGeneration.rarityModifiers[11]) sugarCane.add(new int[]{blockX, blockY+1, blockZ});
+							}
+							if(distFromTop > 4 && distFromBottom > 2)
+							{
+								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[0])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 0});
+								}
+								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[1])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 1});
+								}
+								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[2])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 2});
+								}
+								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[3])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 3});
+								}
+								if(rand.nextDouble() < 0.00005*IslandWorldGeneration.rarityModifiers[4])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 4});
+								}
+								if(rand.nextDouble() < 0.000025*IslandWorldGeneration.rarityModifiers[5])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 5});
+								}
+								if(distFromTop > 12)
+								{
+									if(rand.nextDouble() < 0.00004*IslandWorldGeneration.rarityModifiers[6])
+									{
+										poolPoints.add(new int[]{blockX,blockY,blockZ});
+									}
+									if(rand.nextDouble() < 0.0004*IslandWorldGeneration.rarityModifiers[7])
+									{
+										gravelPoints.add(new int[]{blockX,blockY,blockZ});
+									}
+								}
+								if(islandType == Biome.EXTREME_HILLS && rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[9])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 6});
+								}
+							}
+						}
+						for(int y = upAmount+1; y <= 0; y++)
+						{
+							setBlock(world, blockX, startY+y, blockZ, Material.WATER.getId());
 						}
 					}
-					total /= 49;
-					int downAmount = (int) (total*size*heightMult/3000+1);
-					int thickness = downAmount+upAmount+1;
-					int blockX = startX+x, blockZ = startZ+z;
-					for(int y = -downAmount; y <= upAmount; y++)
+					else
 					{
-						int blockY = startY+y;
-						int distFromTop = upAmount-y;
-						int distFromBottom = downAmount+y;
-						if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextDouble() < 0.000015*IslandWorldGeneration.rarityModifiers[8])
+						//int upAmount = (int)(tileData[x][z]*size*heightMult/(flatIsland?12000:2000));
+						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
+						int total = 0;
+						for(int x2 = -4; x2 <= 4; x2++)
 						{
-							points.add(new int[]{blockX, blockY, blockZ});
-						}
-						if(islandType == Biome.EXTREME_HILLS)
-						{
-							if(sandEdges)
+							for(int z2 = -4; z2 <= 4; z2++)
 							{
-								if(thickness < 7 && distFromTop < 3-(thickness-3)/2)
+								try
 								{
-									setBlock(world, blockX, blockY, blockZ, Material.SOUL_SAND.getId());
+									total += tileData[x+x2][z+z2];
+								}
+								catch(IndexOutOfBoundsException e){}
+							}
+						}
+						total /= 49;
+						int downAmount = (int) (total*size*heightMult/3000+1);
+						int thickness = downAmount+upAmount+1;
+						int blockX = startX+x, blockZ = startZ+z;
+						for(int y = -downAmount; y <= upAmount; y++)
+						{
+							int blockY = startY+y;
+							int distFromTop = upAmount-y;
+							int distFromBottom = downAmount+y;
+							if(islandType != Biome.DESERT && (!flatIsland || distFromTop > 6) && rand.nextDouble() < 0.000015*IslandWorldGeneration.rarityModifiers[8])
+							{
+								points.add(new int[]{blockX, blockY, blockZ});
+							}
+							if(islandType == Biome.EXTREME_HILLS)
+							{
+								if(sandEdges)
+								{
+									if(thickness < 7 && distFromTop < 3-(thickness-3)/2)
+									{
+										setBlock(world, blockX, blockY, blockZ, Material.SOUL_SAND.getId());
+									}
+									else if(distFromTop == 0 && rand.nextInt(50) == 15)
+									{
+										setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
+										((CreatureSpawner)world.getBlockAt(blockX, blockY, blockZ).getState()).setCreatureType(CreatureType.PIG_ZOMBIE);
+									}
+									else setBlock(world, blockX, blockY, blockZ, Material.NETHERRACK.getId());
+									if(distFromTop == 0 && rand.nextInt(10000) == 151)
+									{
+										if(rand.nextBoolean())
+										{
+											for(int x2 = -2; x2 < 2; x2++)
+											{
+												for(int y2 = 1; y2 < 6; y2++)
+												{
+													if(x2 == -2 || x2 == 1 || y2 == 1 || y2 == 5) setBlock(world, blockX+x2, blockY+y2, blockZ, Material.OBSIDIAN.getId());
+												}
+											}
+										}
+										else
+										{
+											for(int z2 = -2; z2 < 2; z2++)
+											{
+												for(int y2 = 1; y2 < 6; y2++)
+												{
+													if(z2 == -2 || z2 == 1 || y2 == 1 || y2 == 5) setBlock(world, blockX, blockY+y2, blockZ+z2, Material.OBSIDIAN.getId());
+												}
+											}
+										}
+									}
 								}
 								else if(distFromTop == 0 && rand.nextInt(50) == 15)
 								{
@@ -1474,230 +1605,238 @@ public class IslePopulator extends BlockPopulator
 									((CreatureSpawner)world.getBlockAt(blockX, blockY, blockZ).getState()).setCreatureType(CreatureType.PIG_ZOMBIE);
 								}
 								else setBlock(world, blockX, blockY, blockZ, Material.NETHERRACK.getId());
-								if(distFromTop == 0 && rand.nextInt(10000) == 151)
+							}
+							else if(islandType == Biome.SMALL_MOUNTAINS)
+							{
+								if(getBlock(world, blockX, blockY, blockZ) != Material.ENDER_PORTAL_FRAME.getId())
+									setBlock(world, blockX, blockY, blockZ, Material.ENDER_STONE.getId());
+								if(distFromTop == 0)
 								{
-									if(rand.nextBoolean())
+									if(rand.nextInt(10000) == 151)
 									{
-										for(int x2 = -2; x2 < 2; x2++)
+										if(rand.nextBoolean())
 										{
-											for(int y2 = 1; y2 < 6; y2++)
+											for(int x2 = -2; x2 <= 2; x2++)
 											{
-												if(x2 == -2 || x2 == 1 || y2 == 1 || y2 == 5) setBlock(world, blockX+x2, blockY+y2, blockZ, Material.OBSIDIAN.getId());
+												for(int z2 = -2; z2 <= 2; z2++)
+												{
+													boolean xEdge = (x2 == -2 || x2 == 2);
+													boolean zEdge = (z2 == -2 || z2 == 2);
+													if(xEdge && !zEdge)
+													{
+														setBlockWithData(world, blockX+x2, blockY, blockZ+z2, Material.ENDER_PORTAL_FRAME.getId(), ((x==2)?1:3)+(rand.nextBoolean()?4:0));
+													}
+													if(zEdge && !xEdge)
+													{
+														setBlockWithData(world, blockX+x2, blockY, blockZ+z2, Material.ENDER_PORTAL_FRAME.getId(), ((z==2)?0:2)+(rand.nextBoolean()?4:0));
+													}
+												}
 											}
 										}
 									}
-									else
+									else if(rand.nextInt(4000) == 3117)
 									{
-										for(int z2 = -2; z2 < 2; z2++)
-										{
-											for(int y2 = 1; y2 < 6; y2++)
-											{
-												if(z2 == -2 || z2 == 1 || y2 == 1 || y2 == 5) setBlock(world, blockX, blockY+y2, blockZ+z2, Material.OBSIDIAN.getId());
-											}
-										}
-									}
-								}
-							}
-							else if(distFromTop == 0 && rand.nextInt(50) == 15)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
-								((CreatureSpawner)world.getBlockAt(blockX, blockY, blockZ).getState()).setCreatureType(CreatureType.PIG_ZOMBIE);
-							}
-							else setBlock(world, blockX, blockY, blockZ, Material.NETHERRACK.getId());
-						}
-						else if(islandType == Biome.SMALL_MOUNTAINS)
-						{
-							if(getBlock(world, blockX, blockY, blockZ) != Material.ENDER_PORTAL_FRAME.getId())
-								setBlock(world, blockX, blockY, blockZ, Material.ENDER_STONE.getId());
-							if(distFromTop == 0)
-							{
-								if(rand.nextInt(10000) == 151)
-								{
-									if(rand.nextBoolean())
-									{
+										int towerHeight = 50+rand.nextInt(51);
 										for(int x2 = -2; x2 <= 2; x2++)
 										{
 											for(int z2 = -2; z2 <= 2; z2++)
 											{
 												boolean xEdge = (x2 == -2 || x2 == 2);
 												boolean zEdge = (z2 == -2 || z2 == 2);
-												if(xEdge && !zEdge)
+												if(!xEdge || !zEdge)
 												{
-													setBlockWithData(world, blockX+x2, blockY, blockZ+z2, Material.ENDER_PORTAL_FRAME.getId(), ((x==2)?1:3)+(rand.nextBoolean()?4:0));
-												}
-												if(zEdge && !xEdge)
-												{
-													setBlockWithData(world, blockX+x2, blockY, blockZ+z2, Material.ENDER_PORTAL_FRAME.getId(), ((z==2)?0:2)+(rand.nextBoolean()?4:0));
+													for(int y2 = 0; y2 < towerHeight; y2++)
+													{
+														if(getBlock(world, blockX+x2, blockY+y2+1, blockZ+z2) != Material.ENDER_PORTAL_FRAME.getId())
+															setBlock(world, blockX+x2, blockY+y2+1, blockZ+z2, Material.OBSIDIAN.getId());
+													}
 												}
 											}
 										}
-									}
-								}
-								else if(rand.nextInt(4000) == 3117)
-								{
-									int towerHeight = 50+rand.nextInt(51);
-									for(int x2 = -2; x2 <= 2; x2++)
-									{
-										for(int z2 = -2; z2 <= 2; z2++)
+										for(int x2 = -1; x2 <= 1; x2++)
 										{
-											boolean xEdge = (x2 == -2 || x2 == 2);
-											boolean zEdge = (z2 == -2 || z2 == 2);
-											if(!xEdge || !zEdge)
+											for(int z2 = -1; z2 <= 1; z2++)
 											{
-												for(int y2 = 0; y2 < towerHeight; y2++)
-												{
-													if(getBlock(world, blockX+x2, blockY+y2+1, blockZ+z2) != Material.ENDER_PORTAL_FRAME.getId())
-														setBlock(world, blockX+x2, blockY+y2+1, blockZ+z2, Material.OBSIDIAN.getId());
-												}
+												if(getBlock(world, blockX+x2, blockY+1, blockZ+z2) != Material.ENDER_PORTAL_FRAME.getId())
+													setBlock(world, blockX+x2, blockY+1, blockZ+z2, Material.OBSIDIAN.getId());
 											}
 										}
 									}
-									for(int x2 = -1; x2 <= 1; x2++)
+								}
+							}
+							else if(islandType == Biome.PLAINS || islandType == Biome.FOREST)
+							{
+								if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
+								{
+									if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
+									else setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
+								}
+								else if(distFromTop == 0)
+								{
+									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
+									if(islandType == Biome.FOREST && rand.nextInt(140) == 37) placeBasicTree(world, blockX, blockY+1, blockZ, rand);
+								}
+								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
+							}
+							else if(islandType == Biome.TAIGA)
+							{
+								if(distFromTop == 0)
+								{
+									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
+									if(rand.nextInt(120) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
+									else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.SNOW.getId());
+								}
+								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
+							}
+							else if(islandType == Biome.DESERT) //desert
+							{
+								if(distFromBottom > 2)
+								{
+									setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
+									if(distFromTop == 0 && rand.nextInt(40) == 2) setBlock(world, blockX, blockY+1, blockZ, Material.CACTUS.getId());
+								}
+								else setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
+							}
+							else if(islandType == Biome.JUNGLE)
+							{
+								if(distFromTop == 0)
+								{
+									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
+									if(rand.nextInt(40) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
+								}
+								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
+							}
+							else if(islandType == Biome.SWAMPLAND)
+							{
+								if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
+								{
+									if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
+									else setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
+								}
+								else if(distFromTop == 0)
+								{
+									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
+									if(rand.nextInt(80) == 37) placeSwampTree(world, blockX, blockY+1, blockZ, rand);
+								}
+								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
+								if(distFromTop == 2 && distFromBottom > 4 && rand.nextInt(250) == 117) poolPoints2.add(new int[]{blockX, blockY, blockZ});
+							}
+							else if(islandType == Biome.MUSHROOM_ISLAND)
+							{
+								if(distFromTop == 0)
+								{
+									setBlock(world, blockX, blockY, blockZ, Material.MYCEL.getId());
+									if(rand.nextInt(250) == 51) placeMushroomTree(world, blockX, blockY+1, blockZ, rand);
+									else if(rand.nextInt(40) == 12) setBlock(world, blockX, blockY+1, blockZ, rand.nextBoolean()?Material.RED_MUSHROOM.getId():Material.BROWN_MUSHROOM.getId());
+								}
+								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
+								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
+							}
+							else
+							{
+								System.out.println("Unknown island type: "+islandType.toString());
+								@SuppressWarnings("unused")
+								int a = 0/0;
+							}
+							if(distFromTop > 4 && distFromBottom > 2)
+							{
+								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[0])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 0});
+								}
+								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[1])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 1});
+								}
+								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[2])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 2});
+								}
+								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[3])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 3});
+								}
+								if(rand.nextDouble() < 0.00005*IslandWorldGeneration.rarityModifiers[4])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 4});
+								}
+								if(rand.nextDouble() < 0.000025*IslandWorldGeneration.rarityModifiers[5])
+								{
+									orePoints.add(new int[]{blockX, blockY, blockZ, 5});
+								}
+								if(distFromTop > 12)
+								{
+									if(rand.nextDouble() < 0.00004*IslandWorldGeneration.rarityModifiers[6])
 									{
-										for(int z2 = -1; z2 <= 1; z2++)
-										{
-											if(getBlock(world, blockX+x2, blockY+1, blockZ+z2) != Material.ENDER_PORTAL_FRAME.getId())
-												setBlock(world, blockX+x2, blockY+1, blockZ+z2, Material.OBSIDIAN.getId());
-										}
+										poolPoints.add(new int[]{blockX,blockY,blockZ});
+									}
+									if(rand.nextDouble() < 0.0004*IslandWorldGeneration.rarityModifiers[7])
+									{
+										gravelPoints.add(new int[]{blockX,blockY,blockZ});
 									}
 								}
-							}
-						}
-						else if(islandType == Biome.PLAINS || islandType == Biome.FOREST)
-						{
-							if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
-							{
-								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
-								else setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
-							}
-							else if(distFromTop == 0)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-								if(islandType == Biome.FOREST && rand.nextInt(140) == 37) placeBasicTree(world, blockX, blockY+1, blockZ, rand);
-							}
-							else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
-							else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
-						}
-						else if(islandType == Biome.TAIGA)
-						{
-							if(distFromTop == 0)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-								if(rand.nextInt(120) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
-								else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.SNOW.getId());
-							}
-							else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
-							else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
-						}
-						else if(islandType == Biome.DESERT) //desert
-						{
-							if(distFromBottom > 2)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
-								if(distFromTop == 0 && rand.nextInt(40) == 2) setBlock(world, blockX, blockY+1, blockZ, Material.CACTUS.getId());
-							}
-							else setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
-						}
-						else if(islandType == Biome.JUNGLE)
-						{
-							if(distFromTop == 0)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-								if(rand.nextInt(40) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
-							}
-							else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
-							else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
-						}
-						else if(islandType == Biome.SWAMPLAND)
-						{
-							if(sandEdges && thickness < 7 && distFromTop < 3-(thickness-3)/2)
-							{
-								if(distFromBottom == 0) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
-								else setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
-							}
-							else if(distFromTop == 0)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-								if(rand.nextInt(80) == 37) placeSwampTree(world, blockX, blockY+1, blockZ, rand);
-							}
-							else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
-							else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
-							if(distFromTop == 2 && distFromBottom > 4 && rand.nextInt(250) == 117) poolPoints2.add(new int[]{blockX, blockY, blockZ});
-						}
-						else if(islandType == Biome.MUSHROOM_ISLAND)
-						{
-							if(distFromTop == 0)
-							{
-								setBlock(world, blockX, blockY, blockZ, Material.MYCEL.getId());
-								if(rand.nextInt(250) == 51) placeMushroomTree(world, blockX, blockY+1, blockZ, rand);
-								else if(rand.nextInt(40) == 12) setBlock(world, blockX, blockY+1, blockZ, rand.nextBoolean()?Material.RED_MUSHROOM.getId():Material.BROWN_MUSHROOM.getId());
-							}
-							else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
-							else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
-						}
-						else
-						{
-							System.out.println("Unknown island type: "+islandType.toString());
-							@SuppressWarnings("unused")
-							int a = 0/0;
-						}
-						if(distFromTop > 4 && distFromBottom > 2)
-						{
-							if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[0])
-							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 0});
-							}
-							if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[1])
-							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 1});
-							}
-							if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[2])
-							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 2});
-							}
-							if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[3])
-							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 3});
-							}
-							if(rand.nextDouble() < 0.00005*IslandWorldGeneration.rarityModifiers[4])
-							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 4});
-							}
-							if(rand.nextDouble() < 0.000025*IslandWorldGeneration.rarityModifiers[5])
-							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 5});
-							}
-							if(distFromTop > 12)
-							{
-								if(rand.nextDouble() < 0.00004*IslandWorldGeneration.rarityModifiers[6])
+								if(islandType == Biome.EXTREME_HILLS && rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[9])
 								{
-									poolPoints.add(new int[]{blockX,blockY,blockZ});
-								}
-								if(rand.nextDouble() < 0.0004*IslandWorldGeneration.rarityModifiers[7])
-								{
-									gravelPoints.add(new int[]{blockX,blockY,blockZ});
+									orePoints.add(new int[]{blockX, blockY, blockZ, 6});
 								}
 							}
-							if(islandType == Biome.EXTREME_HILLS && rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[9])
+						}
+						if(!IslandWorldGeneration.spawnVerified && x == size/2 && z == size/2)
+						{
+							if(islandType == Biome.FOREST || islandType == Biome.TAIGA || islandType == Biome.SWAMPLAND || islandType == Biome.JUNGLE)
 							{
-								orePoints.add(new int[]{blockX, blockY, blockZ, 6});
+								Location loc = world.getSpawnLocation();
+								Chunk chu = world.getChunkAt(loc);
+								if(!world.isChunkLoaded(chu)) world.loadChunk(chu);
+								int spawnY = world.getHighestBlockYAt(loc);
+								if(spawnY < loc.getBlockY()-3)
+								{
+									world.setSpawnLocation(blockX, upAmount+1, blockZ);
+								}
+								IslandWorldGeneration.spawnVerified = true;
 							}
 						}
 					}
-					if(!IslandWorldGeneration.spawnVerified && x == size/2 && z == size/2)
+				}
+			}
+		}
+		while(clayPatches.size() > 0)
+		{
+			int[] pos = clayPatches.remove(0);
+			for(int x = -2; x <= 2; x++)
+			{
+				for(int z = -2; z <= 2; z++)
+				{
+					for(int y = -2; y <= 2; y++)
 					{
-						if(islandType == Biome.FOREST || islandType == Biome.TAIGA || islandType == Biome.SWAMPLAND || islandType == Biome.JUNGLE)
-						{
-							Location loc = world.getSpawnLocation();
-							Chunk chu = world.getChunkAt(loc);
-							if(!world.isChunkLoaded(chu)) world.loadChunk(chu);
-							int spawnY = world.getHighestBlockYAt(loc);
-							if(spawnY < loc.getBlockY()-3)
-							{
-								world.setSpawnLocation(blockX, upAmount+1, blockZ);
-							}
-							IslandWorldGeneration.spawnVerified = true;
-						}
+						int count = 0;
+						if(x == -2 || x == 2) count++;
+						if(y == -2 || y == 2) count++;
+						if(z == -2 || z == 2) count++;
+						if(count < 2 && getBlock(world, pos[0]+x, pos[1]+y, pos[2]+z) == Material.SAND.getId())
+							setBlock(world, pos[0]+x, pos[1]+y, pos[2]+z, Material.CLAY.getId());
+					}
+				}
+			}
+		}
+		while(sugarCane.size() > 0)
+		{
+			int[] pos = sugarCane.remove(0);
+			if(getBlock(world, pos[0], pos[1]-1, pos[2]) == Material.SAND.getId())
+			{
+				if(getBlock(world, pos[0]-1, pos[1]-1, pos[2]) == Material.WATER.getId() ||
+				   getBlock(world, pos[0]+1, pos[1]-1, pos[2]) == Material.WATER.getId() ||
+				   getBlock(world, pos[0], pos[1]-1, pos[2]-1) == Material.WATER.getId() ||
+				   getBlock(world, pos[0], pos[1]-1, pos[2]+1) == Material.WATER.getId())
+				{
+					int height = rand.nextInt(3)+1;
+					for(int a = 0; a < height; a++)
+					{
+						setBlockIfAlreadyAir(world, pos[0], pos[1]+a, pos[2], Material.SUGAR_CANE_BLOCK.getId());
 					}
 				}
 			}
@@ -1749,7 +1888,7 @@ public class IslePopulator extends BlockPopulator
 			if(rand.nextBoolean()) points.add(mid);
 			if(rand.nextBoolean()) points.add(end);
 		}
-		if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND)
+		if(!flatIsland && islandType != Biome.EXTREME_HILLS && islandType != Biome.MUSHROOM_ISLAND && islandType != Biome.SMALL_MOUNTAINS && islandType != Biome.OCEAN)
 		{
 			if(rand.nextDouble() < IslandWorldGeneration.dungeonChance) generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, (5+rand.nextInt(21))*size*size/10000, rand);
 		}
