@@ -16,7 +16,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	public static double[] rarityModifiers;
 	public static int[] islandChances;
 	public static int islandTotalChance;
-	public static double dungeonChance;
+	public static double dungeonChance, grassChance, flowerChance;
 	
 	public static boolean enabled;
 	
@@ -93,6 +93,12 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 			if(islandChances[a] < 0) islandChances[a] = 0;
 			islandTotalChance += islandChances[a];
 		}
+		
+		grassChance = getConfig().getDouble("rarity.grass.coverchance", 0.4);
+		getConfig().set("rarity.grass.coverchance", grassChance);
+		flowerChance = getConfig().getDouble("rarity.grass.flowerchance", 0.15);
+		getConfig().set("rarity.grass.flowerchance", flowerChance);
+		
 		taskRepeatTimer = getConfig().getInt("minutes_between_update_checks", 15);
 		getConfig().set("minutes_between_update_checks", taskRepeatTimer);
 		saveConfig();
@@ -156,6 +162,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					sender.sendMessage("[IsleWorldGen]   Water/Lava pools: "+rarityModifiers[6]);
 					sender.sendMessage("[IsleWorldGen]   Gravel patches: "+rarityModifiers[7]);
 					sender.sendMessage("[IsleWorldGen]   Caves: "+rarityModifiers[8]);
+					sender.sendMessage("[IsleWorldGen]   Grass: "+grassChance*100+"%");
+					sender.sendMessage("[IsleWorldGen]   Flowers: "+flowerChance*100+"%");
 				}
 				else if(args[0].equalsIgnoreCase("islechance"))
 				{

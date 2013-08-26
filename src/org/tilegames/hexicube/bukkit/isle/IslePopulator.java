@@ -1675,6 +1675,15 @@ public class IslePopulator extends BlockPopulator
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 									if(islandType == Biome.FOREST && rand.nextInt(140) == 37) placeBasicTree(world, blockX, blockY+1, blockZ, rand);
+									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
+									{
+										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
+										{
+											if(rand.nextBoolean()) setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.RED_ROSE.getId());
+											else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.YELLOW_FLOWER.getId());
+										}
+										else setBlockIfAlreadyAirWithData(world, blockX, blockY+1, blockZ, Material.LONG_GRASS.getId(), 1);
+									}
 								}
 								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
 								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
@@ -1685,6 +1694,15 @@ public class IslePopulator extends BlockPopulator
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 									if(rand.nextInt(120) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
+									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
+									{
+										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
+										{
+											if(rand.nextBoolean()) setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.RED_ROSE.getId());
+											else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.YELLOW_FLOWER.getId());
+										}
+										else setBlockIfAlreadyAirWithData(world, blockX, blockY+1, blockZ, Material.LONG_GRASS.getId(), 1);
+									}
 									else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.SNOW.getId());
 								}
 								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
@@ -1705,6 +1723,15 @@ public class IslePopulator extends BlockPopulator
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 									if(rand.nextInt(40) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
+									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
+									{
+										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
+										{
+											if(rand.nextBoolean()) setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.RED_ROSE.getId());
+											else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.YELLOW_FLOWER.getId());
+										}
+										else setBlockIfAlreadyAirWithData(world, blockX, blockY+1, blockZ, Material.LONG_GRASS.getId(), 1);
+									}
 								}
 								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
 								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
@@ -1720,6 +1747,15 @@ public class IslePopulator extends BlockPopulator
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
 									if(rand.nextInt(80) == 37) placeSwampTree(world, blockX, blockY+1, blockZ, rand);
+									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
+									{
+										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
+										{
+											if(rand.nextBoolean()) setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.RED_ROSE.getId());
+											else setBlockIfAlreadyAir(world, blockX, blockY+1, blockZ, Material.YELLOW_FLOWER.getId());
+										}
+										else setBlockIfAlreadyAirWithData(world, blockX, blockY+1, blockZ, Material.LONG_GRASS.getId(), 1);
+									}
 								}
 								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
 								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());

@@ -43,7 +43,7 @@ public class UpdateChecker implements Runnable
 	
 	private String shortenURL(String url) throws IOException
 	{
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new URL("https://api-ssl.bitly.com/v3/shorten?access_token=********&format=txt&longUrl="+escapeHtml(url)).openConnection().getInputStream()));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new URL("https://api-ssl.bitly.com/v3/shorten?access_token=59b718cba373dbeb516c90a5ed9b727267b8b5d1&format=txt&longUrl="+escapeHtml(url)).openConnection().getInputStream()));
 		try
 		{
 			return reader.readLine();
