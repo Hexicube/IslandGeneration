@@ -103,16 +103,18 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("minutes_between_update_checks", taskRepeatTimer);
 		saveConfig();
 		
-		try
+		if(taskRepeatTimer > 0)
 		{
-			UpdateChecker c = new UpdateChecker(this, getDescription().getVersion(), "http://dev.bukkit.org/bukkit-plugins/floating-island-world-generation/files.rss");
-			if(taskRepeatTimer > 0) taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, c, 0, 20*60*taskRepeatTimer);
-			else new Thread(c).start();
-		}
-		catch (MalformedURLException e)
-		{
-			e.printStackTrace();
-			getLogger().severe("Error with starting update checker, disabling!");
+			try
+			{
+				UpdateChecker c = new UpdateChecker(this, getDescription().getVersion(), "http://dev.bukkit.org/bukkit-plugins/floating-island-world-generation/files.rss");
+				taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, c, 0, 20*60*taskRepeatTimer);
+			}
+			catch (MalformedURLException e)
+			{
+				e.printStackTrace();
+				getLogger().severe("Error with starting update checker, disabling!");
+			}
 		}
 	}
 	
