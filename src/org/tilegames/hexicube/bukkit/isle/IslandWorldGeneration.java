@@ -174,16 +174,16 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					}
 					else
 					{
-						if(islandChances[0] > 0) sender.sendMessage("[IsleWorldGen]   Plains: "+islandChances[0]+" ("+((double)islandChances[0]*100/islandTotalChance)+"%)");
-						if(islandChances[1] > 0) sender.sendMessage("[IsleWorldGen]   Forest: "+islandChances[1]+" ("+((double)islandChances[1]*100/islandTotalChance)+"%)");
-						if(islandChances[2] > 0) sender.sendMessage("[IsleWorldGen]   Taiga: "+islandChances[2]+" ("+((double)islandChances[2]*100/islandTotalChance)+"%)");
-						if(islandChances[3] > 0) sender.sendMessage("[IsleWorldGen]   Swamp: "+islandChances[3]+" ("+((double)islandChances[3]*100/islandTotalChance)+"%)");
-						if(islandChances[4] > 0) sender.sendMessage("[IsleWorldGen]   Jungle: "+islandChances[4]+" ("+((double)islandChances[4]*100/islandTotalChance)+"%)");
-						if(islandChances[5] > 0) sender.sendMessage("[IsleWorldGen]   Desert: "+islandChances[5]+" ("+((double)islandChances[5]*100/islandTotalChance)+"%)");
-						if(islandChances[6] > 0) sender.sendMessage("[IsleWorldGen]   Nether: "+islandChances[6]+" ("+((double)islandChances[6]*100/islandTotalChance)+"%)");
-						if(islandChances[7] > 0) sender.sendMessage("[IsleWorldGen]   Ender: "+islandChances[7]+" ("+((double)islandChances[7]*100/islandTotalChance)+"%)");
-						if(islandChances[8] > 0) sender.sendMessage("[IsleWorldGen]   Mushroom: "+islandChances[8]+" ("+((double)islandChances[8]*100/islandTotalChance)+"%)");
-						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   Ocean: "+islandChances[9]+" ("+((double)islandChances[9]*100/islandTotalChance)+"%)");
+						if(islandChances[0] > 0) sender.sendMessage("[IsleWorldGen]   Plains: "+islandChances[0]+" ("+Math.round((double)islandChances[0]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[1] > 0) sender.sendMessage("[IsleWorldGen]   Forest: "+islandChances[1]+" ("+Math.round((double)islandChances[1]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[2] > 0) sender.sendMessage("[IsleWorldGen]   Taiga: "+islandChances[2]+" ("+Math.round((double)islandChances[2]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[3] > 0) sender.sendMessage("[IsleWorldGen]   Swamp: "+islandChances[3]+" ("+Math.round((double)islandChances[3]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[4] > 0) sender.sendMessage("[IsleWorldGen]   Jungle: "+islandChances[4]+" ("+Math.round((double)islandChances[4]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[5] > 0) sender.sendMessage("[IsleWorldGen]   Desert: "+islandChances[5]+" ("+Math.round((double)islandChances[5]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[6] > 0) sender.sendMessage("[IsleWorldGen]   Nether: "+islandChances[6]+" ("+Math.round((double)islandChances[6]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[7] > 0) sender.sendMessage("[IsleWorldGen]   Ender: "+islandChances[7]+" ("+Math.round((double)islandChances[7]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[8] > 0) sender.sendMessage("[IsleWorldGen]   Mushroom: "+islandChances[8]+" ("+Math.round((double)islandChances[8]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   Ocean: "+islandChances[9]+" ("+Math.round((double)islandChances[9]*10000/islandTotalChance)/100+"%)");
 					}
 				}
 				else if(args[0].equalsIgnoreCase("checkver") && sender.isOp())

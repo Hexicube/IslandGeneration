@@ -314,6 +314,9 @@ public class IslePopulator extends BlockPopulator
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SNOW.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.NETHERRACK.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GRASS.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.LONG_GRASS.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.YELLOW_FLOWER.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.RED_ROSE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GRAVEL.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SAND.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.SANDSTONE.getId() ||
