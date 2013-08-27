@@ -11,6 +11,7 @@ import org.bukkit.generator.ChunkGenerator;
 
 public class ChunkGen extends ChunkGenerator
 {
+	@Override
 	public byte[][] generateBlockSections(World world, Random random, int chunkX, int chunkZ, BiomeGrid biomeGrid)
 	{
 		for(int x = 0; x < 16; x++)

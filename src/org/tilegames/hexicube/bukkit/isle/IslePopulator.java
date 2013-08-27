@@ -332,6 +332,14 @@ public class IslePopulator extends BlockPopulator
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, 0);
 			chunksection.setData(x & 15, y & 15, z & 15, 0);
+			int id = getBlock(world, x, y+1, z);
+			if(id == Material.SNOW.getId() ||
+			   id == Material.YELLOW_FLOWER.getId() ||
+			   id == Material.RED_ROSE.getId() ||
+			   id == Material.LONG_GRASS.getId() ||
+			   id == Material.RED_MUSHROOM.getId() ||
+			   id == Material.BROWN_MUSHROOM.getId())
+				setBlock(world, x, y+1, z, 0);
 			return true;
 		}
 		return false;
@@ -758,6 +766,17 @@ public class IslePopulator extends BlockPopulator
 					for(int y = 1; y <= upAmount; y++)
 					{
 						setBlock(world, startX+x, startY+y, startZ+z, 0);
+						if(y == upAmount)
+						{
+							int id = getBlock(world, startX+x, startY+y+1, startZ+z);
+							if(id == Material.SNOW.getId() ||
+							   id == Material.YELLOW_FLOWER.getId() ||
+							   id == Material.RED_ROSE.getId() ||
+							   id == Material.LONG_GRASS.getId() ||
+							   id == Material.RED_MUSHROOM.getId() ||
+							   id == Material.BROWN_MUSHROOM.getId())
+								setBlock(world, startX+x, startY+y+1, startZ+z, 0);
+						}
 					}
 				}
 			}
@@ -1453,7 +1472,7 @@ public class IslePopulator extends BlockPopulator
 			{
 				if(tileData[x][z] > 10)
 				{
-					world.setBiome(startX+x, startZ+z, islandType);
+					if(IslandWorldGeneration.parentGen == null) world.setBiome(startX+x, startZ+z, islandType);
 					if(islandType == Biome.OCEAN)
 					{
 						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/8));
@@ -1945,5 +1964,12 @@ public class IslePopulator extends BlockPopulator
 				sendChunkToClient(c.bukkitChunk, players.next());
 			}
 		}
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if(o == null) return false;
+		return o instanceof IslePopulator;
 	}
 }
