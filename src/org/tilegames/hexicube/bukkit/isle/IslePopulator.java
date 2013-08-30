@@ -1490,6 +1490,7 @@ public class IslePopulator extends BlockPopulator
 		ArrayList<int[]> orePoints = new ArrayList<int[]>();
 		ArrayList<int[]> clayPatches = new ArrayList<int[]>();
 		ArrayList<int[]> sugarCane = new ArrayList<int[]>();
+		ArrayList<int[]> cactiPoints = new ArrayList<int[]>();
 		for(int x = 0; x < size; x++)
 		{
 			for(int z = 0; z < size; z++)
@@ -1772,12 +1773,12 @@ public class IslePopulator extends BlockPopulator
 								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
 								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
 							}
-							else if(islandType == Biome.DESERT) //desert
+							else if(islandType == Biome.DESERT)
 							{
 								if(distFromBottom > 2)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
-									if(distFromTop == 0 && rand.nextInt(40) == 2) setBlock(world, blockX, blockY+1, blockZ, Material.CACTUS.getId());
+									if(distFromTop == 0 && rand.nextInt(40) == 2) cactiPoints.add(new int[]{blockX, blockY+1, blockZ});
 								}
 								else setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
 							}
@@ -1956,6 +1957,20 @@ public class IslePopulator extends BlockPopulator
 		{
 			int[] point = gravelPoints.remove(0);
 			gravelBlob(world, point[0], point[1], point[2], rand);
+		}
+		while(cactiPoints.size() > 0)
+		{
+			int[] point = cactiPoints.remove(0);
+			int height = rand.nextInt(2)+rand.nextInt(2)+1;
+			for(int a = 0; a < height; a++)
+			{
+				if(getBlock(world, point[0]+1, point[1]+a, point[2]) == 0 &&
+				   getBlock(world, point[0]-1, point[1]+a, point[2]) == 0 &&
+				   getBlock(world, point[0], point[1]+a, point[2]+1) == 0 &&
+				   getBlock(world, point[0], point[1]+a, point[2]-1) == 0)
+					setBlock(world, point[0], point[1]+a, point[2], Material.CACTUS.getId());
+				else break;
+			}
 		}
 		while(poolPoints.size() > 0)
 		{
