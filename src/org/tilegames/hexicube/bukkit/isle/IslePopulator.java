@@ -434,16 +434,16 @@ public class IslePopulator extends BlockPopulator
 		return false;
 	}
 	
-	private void placeBasicTree(World world, int x, int y, int z, Random rand)
+	private boolean placeBasicTree(World world, int x, int y, int z, Random rand)
 	{
-		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return false;
 		int height = 4 + rand.nextInt(3);
 		for(int y2 = 0; y2 <= height; y2++)
 		{
@@ -467,21 +467,22 @@ public class IslePopulator extends BlockPopulator
 				setBlockIfAlreadyAir(world, x+x2, y+height+1, z+z2, Material.LEAVES.getId());
 			}
 		}
+		return true;
 	}
 	
-	private void placeJungleTree(World world, int x, int y, int z, Random rand)
+	private boolean placeJungleTree(World world, int x, int y, int z, Random rand)
 	{
 		boolean bush = rand.nextBoolean();
 		if(!bush)
 		{
-			if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
-			if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return false;
+			if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return false;
 		}
 		int height = bush?1:(4 + rand.nextInt(6));
 		for(int y2 = 0; y2 <= height; y2++)
@@ -531,18 +532,19 @@ public class IslePopulator extends BlockPopulator
 				}
 			}
 		}
+		return true;
 	}
 	
-	private void placeSwampTree(World world, int x, int y, int z, Random rand)
+	private boolean placeSwampTree(World world, int x, int y, int z, Random rand)
 	{
-		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return false;
 		int height = 4 + rand.nextInt(3);
 		for(int y2 = 0; y2 <= height; y2++)
 		{
@@ -627,18 +629,19 @@ public class IslePopulator extends BlockPopulator
 				}
 			}
 		}
+		return true;
 	}
 	
-	private void placeRedwoodTree(World world, int x, int y, int z, Random rand)
+	private boolean placeRedwoodTree(World world, int x, int y, int z, Random rand)
 	{
-		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
-		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return false;
+		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return false;
 		int height = 6 + rand.nextInt(7);
 		for(int y2 = 0; y2 < height; y2++)
 		{
@@ -715,6 +718,7 @@ public class IslePopulator extends BlockPopulator
 		}
 		setBlockIfAlreadyAirWithData(world, x, y+height+1, z, Material.LEAVES.getId(), 1);
 		setBlockIfAlreadyAir(world, x, y+height+2, z, Material.SNOW.getId());
+		return true;
 	}
 	
 	private void placeMushroomTree(World world, int x, int y, int z, Random rand)
@@ -1486,6 +1490,7 @@ public class IslePopulator extends BlockPopulator
 		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R2.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean flatIsland = rand.nextInt(17) < 5;
+		boolean islandValidSpawn = false;
 		Biome islandType;
 		if(IslandWorldGeneration.islandTotalChance == 0) islandType = Biome.FOREST;
 		else
@@ -1775,7 +1780,10 @@ public class IslePopulator extends BlockPopulator
 								else if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(islandType == Biome.FOREST && rand.nextInt(70) == 37) placeBasicTree(world, blockX, blockY+1, blockZ, rand);
+									if(islandType == Biome.FOREST && rand.nextInt(70) == 37)
+									{
+										if(placeBasicTree(world, blockX, blockY+1, blockZ, rand)) islandValidSpawn = true;
+									}
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1794,7 +1802,10 @@ public class IslePopulator extends BlockPopulator
 								if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(rand.nextInt(65) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
+									if(rand.nextInt(65) == 37)
+									{
+										if(placeRedwoodTree(world, blockX, blockY+1, blockZ, rand)) islandValidSpawn = true;
+									}
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1823,7 +1834,10 @@ public class IslePopulator extends BlockPopulator
 								if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(rand.nextInt(30) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
+									if(rand.nextInt(30) == 37)
+									{
+										if(placeJungleTree(world, blockX, blockY+1, blockZ, rand)) islandValidSpawn = true;
+									}
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1847,7 +1861,10 @@ public class IslePopulator extends BlockPopulator
 								else if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(rand.nextInt(40) == 37) placeSwampTree(world, blockX, blockY+1, blockZ, rand);
+									if(rand.nextInt(40) == 37)
+									{
+										if(placeSwampTree(world, blockX, blockY+1, blockZ, rand)) islandValidSpawn = true;
+									}
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1920,21 +1937,6 @@ public class IslePopulator extends BlockPopulator
 								{
 									orePoints.add(new int[]{blockX, blockY, blockZ, 6});
 								}
-							}
-						}
-						if(!IslandWorldGeneration.spawnVerified && x == size/2 && z == size/2)
-						{
-							if(islandType == Biome.FOREST || islandType == Biome.TAIGA || islandType == Biome.SWAMPLAND || islandType == Biome.JUNGLE)
-							{
-								Location loc = world.getSpawnLocation();
-								Chunk chu = world.getChunkAt(loc);
-								if(!world.isChunkLoaded(chu)) world.loadChunk(chu);
-								int spawnY = world.getHighestBlockYAt(loc);
-								if(spawnY < loc.getBlockY()-3)
-								{
-									world.setSpawnLocation(blockX, upAmount+1, blockZ);
-								}
-								IslandWorldGeneration.spawnVerified = true;
 							}
 						}
 					}
@@ -2055,6 +2057,21 @@ public class IslePopulator extends BlockPopulator
 			while(players.hasNext())
 			{
 				sendChunkToClient(c.bukkitChunk, players.next());
+			}
+		}
+		if(!IslandWorldGeneration.spawnVerified)
+		{
+			if(islandValidSpawn)
+			{
+				Location loc = world.getSpawnLocation();
+				Chunk chu = world.getChunkAt(loc);
+				if(!world.isChunkLoaded(chu)) world.loadChunk(chu);
+				int spawnY = world.getHighestBlockYAt(loc);
+				if(spawnY < loc.getBlockY()-3)
+				{
+					world.setSpawnLocation(startX+size/2, world.getHighestBlockYAt(startX+size/2, startZ+size/2)+1, startZ+size/2);
+				}
+				IslandWorldGeneration.spawnVerified = true;
 			}
 		}
 	}
