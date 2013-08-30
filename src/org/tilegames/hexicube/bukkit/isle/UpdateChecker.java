@@ -10,7 +10,7 @@ import java.net.URL;
 
 public class UpdateChecker implements Runnable
 {
-	private int[] curVer;
+	private int[] curVer, newestVer;
 	private String curVerStr;
 	private URL feedUrl;
 	private IslandWorldGeneration plugin;
@@ -91,12 +91,31 @@ public class UpdateChecker implements Runnable
 				if(newVersion[a] < curVer[a]) break;
 			}
 			outdated = newVer;
+			boolean newVerChanged = false;
+			if(newestVer == null) newVerChanged = true;
+			else for(int a = 0; a < newVersion.length; a++)
+			{
+				if(a >= newestVer.length)
+				{
+					newVerChanged = true;
+					break;
+				}
+				if(newVersion[a] != newestVer[a])
+				{
+					newVerChanged = true;
+					break;
+				}
+			}
 			if(newVer)
 			{
 				plugin.getLogger().info("New version link: "+link);
 				plugin.getLogger().info("Short link: "+shortLink);
-				plugin.tellOps("[IsleWorldGen] New version detected: "+version);
-				plugin.tellOps("[IsleWorldGen] Link: "+shortLink);
+				if(newVerChanged)
+				{
+					newestVer = newVersion;
+					plugin.tellOps("[IsleWorldGen] New version detected: "+version);
+					plugin.tellOps("[IsleWorldGen] Link: "+shortLink);
+				}
 			}
 			else
 			{
