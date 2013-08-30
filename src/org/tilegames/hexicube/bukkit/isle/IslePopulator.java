@@ -8,6 +8,10 @@ import java.util.Random;
 
 import net.minecraft.server.v1_6_R2.ChunkCoordIntPair;
 import net.minecraft.server.v1_6_R2.ChunkSection;
+import net.minecraft.server.v1_6_R2.NBTTagCompound;
+import net.minecraft.server.v1_6_R2.TileEntity;
+import net.minecraft.server.v1_6_R2.TileEntityChest;
+import net.minecraft.server.v1_6_R2.TileEntityMobSpawner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -15,19 +19,16 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Chest;
-import org.bukkit.block.CreatureSpawner;
 import org.bukkit.craftbukkit.v1_6_R2.CraftChunk;
+import org.bukkit.craftbukkit.v1_6_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_6_R2.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.BlockPopulator;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
-@SuppressWarnings("deprecation")
 public class IslePopulator extends BlockPopulator
 {
 	private ArrayList<net.minecraft.server.v1_6_R2.Chunk> chunksToReload;
@@ -35,7 +36,7 @@ public class IslePopulator extends BlockPopulator
 	
 	private static ArrayList<Schematic> schematics;
 	
-	public static void interpretSchematic(String data)
+	/*public static void interpretSchematic(String data)
 	{
 		String[] data2 = data.split("=");
 		if(data2.length < 4)
@@ -139,7 +140,7 @@ public class IslePopulator extends BlockPopulator
 		}
 		if(schematics == null) schematics = new ArrayList<Schematic>();
 		schematics.add(s);
-	}
+	}*/
 	
 	@SuppressWarnings("unchecked")
 	private void sendChunkToClient(Chunk chunk, Player player)
@@ -286,7 +287,17 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
-	private int getBlock(World world, int x, int y, int z)
+	public void addTileEntity(World world, TileEntity entity)
+	{
+		((CraftWorld)world).getHandle().setTileEntity(entity.x, entity.y, entity.z, entity);
+	}
+	
+	public void removeTileEntity(World world, int x, int y, int z)
+	{
+		((CraftWorld)world).getHandle().setTileEntity(x, y, z, null);
+	}
+	
+	public int getBlock(World world, int x, int y, int z)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
 		return chunksection.getTypeId(x & 15, y & 15, z & 15);
@@ -297,7 +308,7 @@ public class IslePopulator extends BlockPopulator
 		setBlockWithData(world, x, y, z, id, 0);
 	}
 	
-	private void setBlockWithData(World world, int x, int y, int z, int id, int data)
+	public void setBlockWithData(World world, int x, int y, int z, int id, int data)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
 		chunksection.setTypeId(x & 15, y & 15, z & 15, id);
@@ -811,10 +822,15 @@ public class IslePopulator extends BlockPopulator
 	{
 		int placed = 0;
 		ArrayList<int[]> targets = new ArrayList<int[]>();
-		targets.add(new int[]{x,y,z});
+		targets.add(new int[]{x, y, z});
 		while(targets.size() > 0 && placed < size)
 		{
 			int[] target = targets.remove(rand.nextInt(targets.size()));
+			if(id == Material.GRAVEL.getId())
+			{
+				int belowID = getBlock(world, target[0], target[1]-1, target[2]);
+				if(belowID == 0) continue;
+			}
 			if(setBlockIfAcceptsOre(world, target[0], target[1], target[2], id))
 			{
 				targets.add(new int[]{target[0]+1,target[1],target[2]});
@@ -1266,15 +1282,22 @@ public class IslePopulator extends BlockPopulator
 			setAirIfAllowed(world, position[0], position[1]+1, position[2], true);
 			if(setBlockIfAlreadyAir(world, position[0], position[1]+1, position[2], Material.MOB_SPAWNER.getId()))
 			{
-				CreatureType mobType = null;
+				TileEntityMobSpawner t = new TileEntityMobSpawner();
+				t.x = position[0];
+				t.y = position[1]+1;
+				t.z = position[2];
+				NBTTagCompound data = new NBTTagCompound();
+				t.b(data);
 				int val = rand.nextInt(25);
-				if(val < 7) mobType = CreatureType.SKELETON;
-				else if(val < 14) mobType = CreatureType.ZOMBIE;
-				else if(val < 21) mobType = CreatureType.SPIDER;
-				else mobType = CreatureType.CAVE_SPIDER;
-				((CreatureSpawner)world.getBlockAt(position[0], position[1]+1, position[2]).getState()).setCreatureType(mobType);
+				if(val < 7) data.setString("EntityId", "Skeleton");
+				else if(val < 14) data.setString("EntityId", "Zombie");
+				else if(val < 21) data.setString("EntityId", "Spider");
+				else data.setString("EntityId", "CaveSpider");
+				data.setShort("RequiredPlayerRange", (short)24);
+				t.a(data);
+				addTileEntity(world, t);
 			}
-			int chestCount = rand.nextInt(4);
+			int chestCount = rand.nextInt(2)+1;
 			for(int a = 0; a < chestCount; a++)
 			{
 				int wallID = rand.nextInt(4);
@@ -1328,8 +1351,13 @@ public class IslePopulator extends BlockPopulator
 	
 	private void populateChest(World world, int x, int y, int z, Random rand)
 	{
-		Chest c = (Chest)world.getBlockAt(x, y, z).getState();
-		Inventory v = c.getInventory();
+		TileEntity t = ((CraftWorld)world).getTileEntityAt(x, y, z);
+		if(!(t instanceof TileEntityChest))
+		{
+			System.out.println("Tried to fill a chest that doesn't exist!");
+			return;
+		}
+		TileEntityChest c = (TileEntityChest)t;
 		int numItems = 2+rand.nextInt(3)+rand.nextInt(4)+rand.nextInt(3);
 		for(int a = 0; a < numItems; a++)
 		{
@@ -1414,8 +1442,9 @@ public class IslePopulator extends BlockPopulator
 				if(m == null) System.out.println("Bad record number: "+number);
 				else stack = new ItemStack(m);
 			}
-			v.setItem(rand.nextInt(3)*9+a, stack);
+			c.setItem(rand.nextInt(3)*9+a, CraftItemStack.asNMSCopy(stack));
 		}
+		addTileEntity(world, c);
 	}
 	
 	@Override
@@ -1472,7 +1501,7 @@ public class IslePopulator extends BlockPopulator
 			{
 				if(tileData[x][z] > 10)
 				{
-					if(IslandWorldGeneration.parentGen == null) world.setBiome(startX+x, startZ+z, islandType);
+					if(IslandWorldGeneration.parentGen.equals("")) world.setBiome(startX+x, startZ+z, islandType);
 					if(islandType == Biome.OCEAN)
 					{
 						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/8));
@@ -1594,7 +1623,16 @@ public class IslePopulator extends BlockPopulator
 									else if(distFromTop == 0 && rand.nextInt(50) == 15)
 									{
 										setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
-										((CreatureSpawner)world.getBlockAt(blockX, blockY, blockZ).getState()).setCreatureType(CreatureType.PIG_ZOMBIE);
+										TileEntityMobSpawner t = new TileEntityMobSpawner();
+										t.x = blockX;
+										t.y = blockY;
+										t.z = blockZ;
+										NBTTagCompound data = new NBTTagCompound();
+										t.b(data);
+										data.setString("EntityId", "PigZombie");
+										data.setShort("RequiredPlayerRange", (short)64);
+										t.a(data);
+										addTileEntity(world, t);
 									}
 									else setBlock(world, blockX, blockY, blockZ, Material.NETHERRACK.getId());
 									if(distFromTop == 0 && rand.nextInt(10000) == 151)
@@ -1624,7 +1662,16 @@ public class IslePopulator extends BlockPopulator
 								else if(distFromTop == 0 && rand.nextInt(50) == 15)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
-									((CreatureSpawner)world.getBlockAt(blockX, blockY, blockZ).getState()).setCreatureType(CreatureType.PIG_ZOMBIE);
+									TileEntityMobSpawner t = new TileEntityMobSpawner();
+									t.x = blockX;
+									t.y = blockY;
+									t.z = blockZ;
+									NBTTagCompound data = new NBTTagCompound();
+									t.b(data);
+									data.setString("EntityId", "PigZombie");
+									data.setShort("RequiredPlayerRange", (short)64);
+									t.a(data);
+									addTileEntity(world, t);
 								}
 								else setBlock(world, blockX, blockY, blockZ, Material.NETHERRACK.getId());
 							}
