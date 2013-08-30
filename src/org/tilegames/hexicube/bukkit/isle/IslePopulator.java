@@ -811,7 +811,7 @@ public class IslePopulator extends BlockPopulator
 					int downAmount = (int) (tileData[x][z]/55)+1;
 					for(int y = -downAmount; y <= upAmount; y++)
 					{
-						setBlock(world, startX+x, startY+y, startZ+z, Material.GRAVEL.getId());
+						if(getBlock(world, startX+x, startY+y-1, startZ+z) != 0) setBlock(world, startX+x, startY+y, startZ+z, Material.GRAVEL.getId());
 					}
 				}
 			}
@@ -826,11 +826,6 @@ public class IslePopulator extends BlockPopulator
 		while(targets.size() > 0 && placed < size)
 		{
 			int[] target = targets.remove(rand.nextInt(targets.size()));
-			if(id == Material.GRAVEL.getId())
-			{
-				int belowID = getBlock(world, target[0], target[1]-1, target[2]);
-				if(belowID == 0) continue;
-			}
 			if(setBlockIfAcceptsOre(world, target[0], target[1], target[2], id))
 			{
 				targets.add(new int[]{target[0]+1,target[1],target[2]});
