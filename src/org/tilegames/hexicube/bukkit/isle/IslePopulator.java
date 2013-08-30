@@ -436,6 +436,14 @@ public class IslePopulator extends BlockPopulator
 	
 	private void placeBasicTree(World world, int x, int y, int z, Random rand)
 	{
+		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
 		int height = 4 + rand.nextInt(3);
 		for(int y2 = 0; y2 <= height; y2++)
 		{
@@ -463,7 +471,19 @@ public class IslePopulator extends BlockPopulator
 	
 	private void placeJungleTree(World world, int x, int y, int z, Random rand)
 	{
-		int height = rand.nextBoolean()?1:(4 + rand.nextInt(6));
+		boolean bush = rand.nextBoolean();
+		if(!bush)
+		{
+			if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
+			if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
+		}
+		int height = bush?1:(4 + rand.nextInt(6));
 		for(int y2 = 0; y2 <= height; y2++)
 		{
 			if(y2 < height) setBlockWithData(world, x, y+y2, z, Material.LOG.getId(), 3);
@@ -515,6 +535,14 @@ public class IslePopulator extends BlockPopulator
 	
 	private void placeSwampTree(World world, int x, int y, int z, Random rand)
 	{
+		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
 		int height = 4 + rand.nextInt(3);
 		for(int y2 = 0; y2 <= height; y2++)
 		{
@@ -603,6 +631,14 @@ public class IslePopulator extends BlockPopulator
 	
 	private void placeRedwoodTree(World world, int x, int y, int z, Random rand)
 	{
+		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+3, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+3, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+3, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+6, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x+2, y+6, z-2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+6, z+2) == Material.LEAVES.getId()) return;
+		if(getBlock(world, x-2, y+6, z-2) == Material.LEAVES.getId()) return;
 		int height = 6 + rand.nextInt(7);
 		for(int y2 = 0; y2 < height; y2++)
 		{
@@ -1739,7 +1775,7 @@ public class IslePopulator extends BlockPopulator
 								else if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(islandType == Biome.FOREST && rand.nextInt(140) == 37) placeBasicTree(world, blockX, blockY+1, blockZ, rand);
+									if(islandType == Biome.FOREST && rand.nextInt(70) == 37) placeBasicTree(world, blockX, blockY+1, blockZ, rand);
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1758,7 +1794,7 @@ public class IslePopulator extends BlockPopulator
 								if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(rand.nextInt(120) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
+									if(rand.nextInt(65) == 37) placeRedwoodTree(world, blockX, blockY+1, blockZ, rand);
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1787,7 +1823,7 @@ public class IslePopulator extends BlockPopulator
 								if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(rand.nextInt(40) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
+									if(rand.nextInt(30) == 37) placeJungleTree(world, blockX, blockY+1, blockZ, rand);
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1811,7 +1847,7 @@ public class IslePopulator extends BlockPopulator
 								else if(distFromTop == 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.GRASS.getId());
-									if(rand.nextInt(80) == 37) placeSwampTree(world, blockX, blockY+1, blockZ, rand);
+									if(rand.nextInt(40) == 37) placeSwampTree(world, blockX, blockY+1, blockZ, rand);
 									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
@@ -1832,7 +1868,7 @@ public class IslePopulator extends BlockPopulator
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.MYCEL.getId());
 									if(rand.nextInt(250) == 51) placeMushroomTree(world, blockX, blockY+1, blockZ, rand);
-									else if(rand.nextInt(40) == 12) setBlock(world, blockX, blockY+1, blockZ, rand.nextBoolean()?Material.RED_MUSHROOM.getId():Material.BROWN_MUSHROOM.getId());
+									else if(rand.nextInt(30) == 12) setBlock(world, blockX, blockY+1, blockZ, rand.nextBoolean()?Material.RED_MUSHROOM.getId():Material.BROWN_MUSHROOM.getId());
 								}
 								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.DIRT.getId());
 								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
