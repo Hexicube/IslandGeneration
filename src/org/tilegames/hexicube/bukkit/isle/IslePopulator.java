@@ -36,6 +36,8 @@ public class IslePopulator extends BlockPopulator
 	
 	private static ArrayList<Schematic> schematics;
 	
+	public static PlacableOre[] placableOres;
+	
 	/*public static void interpretSchematic(String data)
 	{
 		String[] data2 = data.split("=");
@@ -297,6 +299,11 @@ public class IslePopulator extends BlockPopulator
 		((CraftWorld)world).getHandle().setTileEntity(x, y, z, null);
 	}
 	
+	public TileEntity getTileEntity(World world, int x, int y, int z)
+	{
+		return ((CraftWorld)world).getHandle().getTileEntity(x, y, z);
+	}
+	
 	public int getBlock(World world, int x, int y, int z)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
@@ -339,7 +346,9 @@ public class IslePopulator extends BlockPopulator
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GOLD_ORE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.REDSTONE_ORE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.DIAMOND_ORE.getId() ||
-		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.EMERALD_ORE.getId())
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.EMERALD_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.QUARTZ_ORE.getId() ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GLOWSTONE.getId())
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, 0);
 			chunksection.setData(x & 15, y & 15, z & 15, 0);
@@ -413,22 +422,6 @@ public class IslePopulator extends BlockPopulator
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, id);
 			chunksection.setData(x & 15, y & 15, z & 15, data);
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean setBlockIfAcceptsOre(World world, int x, int y, int z, int id)
-	{
-		ChunkSection chunksection = getChunkSection(world, x, y, z);
-		int oldid = chunksection.getTypeId(x & 15, y & 15, z & 15);
-		if(oldid == Material.STONE.getId() ||
-		   oldid == Material.NETHERRACK.getId() ||
-		   oldid == Material.SAND.getId() ||
-		   oldid == Material.ENDER_STONE.getId())
-		{
-			chunksection.setTypeId(x & 15, y & 15, z & 15, id);
-			chunksection.setData(x & 15, y & 15, z & 15, 0);
 			return true;
 		}
 		return false;
@@ -851,23 +844,28 @@ public class IslePopulator extends BlockPopulator
 					int downAmount = (int) (tileData[x][z]/55)+1;
 					for(int y = -downAmount; y <= upAmount; y++)
 					{
-						if(getBlock(world, startX+x, startY+y-1, startZ+z) != 0) setBlock(world, startX+x, startY+y, startZ+z, Material.GRAVEL.getId());
+						if(getBlock(world, startX+x, startY+y-1, startZ+z) != 0)
+						{
+							if(getTileEntity(world, startX+x, startY+y, startZ+z) == null) setBlock(world, startX+x, startY+y, startZ+z, Material.GRAVEL.getId());
+						}
 					}
 				}
 			}
 		}
 	}
 	
-	private void generateVein(World world, int x, int y, int z, int id, int size, Random rand)
+	private void generateVein(World world, int x, int y, int z, PlacableOre ore, Random rand)
 	{
 		int placed = 0;
+		int size = ore.getVeinSize(rand);
 		ArrayList<int[]> targets = new ArrayList<int[]>();
 		targets.add(new int[]{x, y, z});
 		while(targets.size() > 0 && placed < size)
 		{
 			int[] target = targets.remove(rand.nextInt(targets.size()));
-			if(setBlockIfAcceptsOre(world, target[0], target[1], target[2], id))
+			if(ore.canReplace(getBlock(world, target[0], target[1], target[2])))
 			{
+				setBlockWithData(world, target[0], target[1], target[2], ore.getOreID(), ore.getOreData());
 				targets.add(new int[]{target[0]+1,target[1],target[2]});
 				targets.add(new int[]{target[0]-1,target[1],target[2]});
 				targets.add(new int[]{target[0],target[1]+1,target[2]});
@@ -1574,30 +1572,6 @@ public class IslePopulator extends BlockPopulator
 							}
 							if(distFromTop > 4 && distFromBottom > 2)
 							{
-								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[0])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 0});
-								}
-								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[1])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 1});
-								}
-								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[2])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 2});
-								}
-								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[3])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 3});
-								}
-								if(rand.nextDouble() < 0.00005*IslandWorldGeneration.rarityModifiers[4])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 4});
-								}
-								if(rand.nextDouble() < 0.000025*IslandWorldGeneration.rarityModifiers[5])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 5});
-								}
 								if(distFromTop > 12)
 								{
 									if(rand.nextDouble() < 0.00004*IslandWorldGeneration.rarityModifiers[6])
@@ -1609,9 +1583,12 @@ public class IslePopulator extends BlockPopulator
 										gravelPoints.add(new int[]{blockX,blockY,blockZ});
 									}
 								}
-								if(islandType == Biome.EXTREME_HILLS && rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[9])
+							}
+							for(int a = 0; a < placableOres.length; a++)
+							{
+								if(rand.nextDouble() < placableOres[a].getChance())
 								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 6});
+									orePoints.add(new int[]{blockX, blockY, blockZ, a});
 								}
 							}
 						}
@@ -1622,7 +1599,6 @@ public class IslePopulator extends BlockPopulator
 					}
 					else
 					{
-						//int upAmount = (int)(tileData[x][z]*size*heightMult/(flatIsland?12000:2000));
 						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
 						int total = 0;
 						for(int x2 = -4; x2 <= 4; x2++)
@@ -1898,30 +1874,6 @@ public class IslePopulator extends BlockPopulator
 							}
 							if(distFromTop > 4 && distFromBottom > 2)
 							{
-								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[0])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 0});
-								}
-								if(rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[1])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 1});
-								}
-								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[2])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 2});
-								}
-								if(rand.nextDouble() < 0.0002*IslandWorldGeneration.rarityModifiers[3])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 3});
-								}
-								if(rand.nextDouble() < 0.00005*IslandWorldGeneration.rarityModifiers[4])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 4});
-								}
-								if(rand.nextDouble() < 0.000025*IslandWorldGeneration.rarityModifiers[5])
-								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 5});
-								}
 								if(distFromTop > 12)
 								{
 									if(rand.nextDouble() < 0.00004*IslandWorldGeneration.rarityModifiers[6])
@@ -1933,9 +1885,12 @@ public class IslePopulator extends BlockPopulator
 										gravelPoints.add(new int[]{blockX,blockY,blockZ});
 									}
 								}
-								if(islandType == Biome.EXTREME_HILLS && rand.nextDouble() < 0.001*IslandWorldGeneration.rarityModifiers[9])
+							}
+							for(int a = 0; a < placableOres.length; a++)
+							{
+								if(rand.nextDouble() < placableOres[a].getChance())
 								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, 6});
+									orePoints.add(new int[]{blockX, blockY, blockZ, a});
 								}
 							}
 						}
@@ -1983,13 +1938,7 @@ public class IslePopulator extends BlockPopulator
 		while(orePoints.size() > 0)
 		{
 			int[] point = orePoints.remove(rand.nextInt(orePoints.size()));
-			if(point[3] == 0) generateVein(world, point[0], point[1], point[2], Material.COAL_ORE.getId(), rand.nextInt(17)+4, rand);
-			else if(point[3] == 1) generateVein(world, point[0], point[1], point[2], Material.IRON_ORE.getId(), rand.nextInt(7)+4, rand);
-			else if(point[3] == 2) generateVein(world, point[0], point[1], point[2], Material.GOLD_ORE.getId(), rand.nextInt(5)+3, rand);
-			else if(point[3] == 3) generateVein(world, point[0], point[1], point[2], Material.REDSTONE_ORE.getId(), rand.nextInt(15)+1, rand);
-			else if(point[3] == 4) generateVein(world, point[0], point[1], point[2], Material.DIAMOND_ORE.getId(), rand.nextInt(8)+1, rand);
-			else if(point[3] == 5) generateVein(world, point[0], point[1], point[2], Material.EMERALD_ORE.getId(), rand.nextInt(5)+4, rand);
-			else if(point[3] == 6) generateVein(world, point[0], point[1], point[2], Material.QUARTZ_ORE.getId(), rand.nextInt(15)+1, rand);
+			generateVein(world, point[0], point[1], point[2], placableOres[point[3]], rand);
 		}
 		while(gravelPoints.size() > 0)
 		{

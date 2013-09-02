@@ -1,13 +1,19 @@
 package org.tilegames.hexicube.bukkit.isle;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 
+import org.bukkit.Material;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,7 +49,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("island.spacing", islandSpacing);
 		islandStartY = getConfig().getInt("island.height", 150);
 		getConfig().set("island.height", islandStartY);
-		rarityModifiers = new double[12];
+		rarityModifiers = new double[13];
 		rarityModifiers[0] = getConfig().getDouble("rarity.coalore", 1);
 		getConfig().set("rarity.coalore", rarityModifiers[0]);
 		rarityModifiers[1] = getConfig().getDouble("rarity.ironore", 1);
@@ -68,6 +74,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.clay", rarityModifiers[10]);
 		rarityModifiers[11] = getConfig().getDouble("rarity.sugarcane", 1);
 		getConfig().set("rarity.sugarcane", rarityModifiers[11]);
+		rarityModifiers[12] = getConfig().getDouble("rarity.glowstone", 1);
+		getConfig().set("rarity.glowstone", rarityModifiers[12]);
 		
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
@@ -112,6 +120,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("parent_generator", parentGen);
 		saveConfig();
 		
+		loadOres();
+		
 		if(taskRepeatTimer > 0)
 		{
 			try
@@ -132,6 +142,72 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	{
 		if(taskRepeatTimer > 0) getServer().getScheduler().cancelTask(taskID);
 		enabled = false;
+	}
+	
+	private void loadOres()
+	{
+		ArrayList<PlacableOre> oreList = new ArrayList<PlacableOre>();
+		int[] generalReplacableBlocks = new int[]{Material.STONE.getId(), Material.COBBLESTONE.getId(), Material.MOSSY_COBBLESTONE.getId(), Material.SAND.getId(), Material.SANDSTONE.getId()};
+		int[] netherReplacableBlocks = new int[]{Material.NETHERRACK.getId(), 0};
+		oreList.add(new PlacableOre(Material.COAL_ORE.getId(), 0, 4, 20, generalReplacableBlocks, 0.001*IslandWorldGeneration.rarityModifiers[0]));
+		oreList.add(new PlacableOre(Material.IRON_ORE.getId(), 0, 4, 10, generalReplacableBlocks, 0.001*IslandWorldGeneration.rarityModifiers[1]));
+		oreList.add(new PlacableOre(Material.GOLD_ORE.getId(), 0, 3, 7, generalReplacableBlocks, 0.0002*IslandWorldGeneration.rarityModifiers[2]));
+		oreList.add(new PlacableOre(Material.REDSTONE_ORE.getId(), 0, 1, 15, generalReplacableBlocks, 0.0002*IslandWorldGeneration.rarityModifiers[3]));
+		oreList.add(new PlacableOre(Material.DIAMOND_ORE.getId(), 0, 1, 8, generalReplacableBlocks, 0.00005*IslandWorldGeneration.rarityModifiers[4]));
+		oreList.add(new PlacableOre(Material.EMERALD_ORE.getId(), 0, 4, 8, generalReplacableBlocks, 0.000025*IslandWorldGeneration.rarityModifiers[5]));
+		oreList.add(new PlacableOre(Material.QUARTZ_ORE.getId(), 0, 3, 15, netherReplacableBlocks, 0.001*IslandWorldGeneration.rarityModifiers[9]));
+		oreList.add(new PlacableOre(Material.GLOWSTONE.getId(), 0, 15, 70, netherReplacableBlocks, 0.0001*IslandWorldGeneration.rarityModifiers[12]));
+		try
+		{
+			YamlConfiguration y;
+			File f = new File(getDataFolder().getAbsolutePath()+File.separator+"ores");
+			System.out.println(f.getAbsolutePath());
+			File[] files = f.listFiles();
+			if(files != null)
+			{
+				for(int a = 0; a < files.length; a++)
+				{
+					y = new YamlConfiguration();
+					try
+					{
+						y.load(files[a]);
+						boolean debug = y.getBoolean("debug", false);
+						if(debug) getLogger().info("Ore debug: "+files[a].getName());
+						int oreID = getMaterialID(y.getString("id", ""));
+						if(debug) getLogger().info("  Ore ID: "+oreID);
+						int oreData = y.getInt("dmg", 0);
+						if(debug) getLogger().info("  Ore Data: "+oreData);
+						int veinMinSize = y.getInt("minsize", 1);
+						int veinMaxSize = y.getInt("maxsize", veinMinSize);
+						if(debug) getLogger().info("  Ore Vein Size: "+veinMinSize+"-"+veinMaxSize);
+						String[] data = y.getString("replaces", "").split(",");
+						int[] canReplace = new int[data.length];
+						for(int b = 0; b < data.length; b++)
+						{
+							canReplace[b] = getMaterialID(data[b]);
+							if(debug) getLogger().info("  Ore Can Replace: "+canReplace[b]);
+						}
+						double chance = y.getDouble("chance", 0.0);
+						if(debug) getLogger().info("  Ore Chance: "+chance);
+						oreList.add(new PlacableOre(oreID, oreData, veinMinSize, veinMaxSize, canReplace, chance));
+					}
+					catch (InvalidConfigurationException e)
+					{
+						getLogger().warning("Invalid ore YML file: "+f.getName());
+					}
+				}
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		int size = oreList.size();
+		IslePopulator.placableOres = new PlacableOre[size];
+		for(int a = 0; a < size; a++)
+		{
+			IslePopulator.placableOres[a] = oreList.get(a);
+		}
 	}
 	
 	@Override
@@ -176,6 +252,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					sender.sendMessage("[IsleWorldGen]   Diamond ore: "+rarityModifiers[4]);
 					sender.sendMessage("[IsleWorldGen]   Emerald ore: "+rarityModifiers[5]);
 					sender.sendMessage("[IsleWorldGen]   Quartz ore: "+rarityModifiers[9]);
+					sender.sendMessage("[IsleWorldGen]   Glowstone ore: "+rarityModifiers[12]);
 					sender.sendMessage("[IsleWorldGen]   Clay patches (lakes): "+rarityModifiers[10]);
 					sender.sendMessage("[IsleWorldGen]   Sugar cane (lakes): "+rarityModifiers[11]);
 					sender.sendMessage("[IsleWorldGen]   Water/Lava pools: "+rarityModifiers[6]);
@@ -250,5 +327,19 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 				p.sendMessage("[IsleWorldGen] Link: "+UpdateChecker.latestLink);
 			}
 		}
+	}
+	
+	private int getMaterialID(String s)
+	{
+		try
+		{
+			return Integer.parseInt(s);
+		}
+		catch(NumberFormatException e)
+		{
+			Material m = Material.getMaterial(s);
+			if(m != null) return m.getId();
+		}
+		return 0;
 	}
 }
