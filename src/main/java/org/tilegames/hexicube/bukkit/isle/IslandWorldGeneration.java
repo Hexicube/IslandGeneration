@@ -147,7 +147,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	private void loadOres()
 	{
 		ArrayList<PlacableOre> oreList = new ArrayList<PlacableOre>();
-		int[] generalReplacableBlocks = new int[]{Material.STONE.getId(), Material.COBBLESTONE.getId(), Material.MOSSY_COBBLESTONE.getId(), Material.SAND.getId(), Material.SANDSTONE.getId()};
+		int[] generalReplacableBlocks = new int[]{Material.STONE.getId(), Material.COBBLESTONE.getId(), Material.MOSSY_COBBLESTONE.getId(), Material.SANDSTONE.getId()};
 		int[] netherReplacableBlocks = new int[]{Material.NETHERRACK.getId(), 0};
 		oreList.add(new PlacableOre(Material.COAL_ORE.getId(), 0, 4, 20, generalReplacableBlocks, 0.001*IslandWorldGeneration.rarityModifiers[0]));
 		oreList.add(new PlacableOre(Material.IRON_ORE.getId(), 0, 4, 10, generalReplacableBlocks, 0.001*IslandWorldGeneration.rarityModifiers[1]));

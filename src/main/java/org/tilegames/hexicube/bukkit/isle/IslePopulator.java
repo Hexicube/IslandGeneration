@@ -1584,11 +1584,14 @@ public class IslePopulator extends BlockPopulator
 									}
 								}
 							}
-							for(int a = 0; a < placableOres.length; a++)
+							if(getBlock(world, blockX, blockY, blockZ) != 0)
 							{
-								if(rand.nextDouble() < placableOres[a].getChance())
+								for(int a = 0; a < placableOres.length; a++)
 								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, a});
+									if(rand.nextDouble() < placableOres[a].getChance())
+									{
+										orePoints.add(new int[]{blockX, blockY, blockZ, a});
+									}
 								}
 							}
 						}
@@ -1798,7 +1801,7 @@ public class IslePopulator extends BlockPopulator
 							}
 							else if(islandType == Biome.DESERT)
 							{
-								if(distFromBottom > 2)
+								if(distFromTop < 4 && distFromBottom > 0)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
 									if(distFromTop == 0 && rand.nextInt(40) == 2) cactiPoints.add(new int[]{blockX, blockY+1, blockZ});
@@ -1886,11 +1889,14 @@ public class IslePopulator extends BlockPopulator
 									}
 								}
 							}
-							for(int a = 0; a < placableOres.length; a++)
+							if(getBlock(world, blockX, blockY, blockZ) != 0)
 							{
-								if(rand.nextDouble() < placableOres[a].getChance())
+								for(int a = 0; a < placableOres.length; a++)
 								{
-									orePoints.add(new int[]{blockX, blockY, blockZ, a});
+									if(rand.nextDouble() < placableOres[a].getChance())
+									{
+										orePoints.add(new int[]{blockX, blockY, blockZ, a});
+									}
 								}
 							}
 						}
