@@ -1,0 +1,10 @@
+name: IsleWorldGen
+main: org.tilegames.hexicube.bukkit.isle.IslandWorldGeneration
+version: 3.0
+load: STARTUP
+commands:
+  islegen:
+    description: Island Generation command
+    usage: /islegen [data|chancemod|islechance]
+    permission: 
+    permission-message: You do not have permission to do that!

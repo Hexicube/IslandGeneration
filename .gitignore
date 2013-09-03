@@ -1,47 +1,77 @@
-#################
-## Eclipse
-#################
+# Compiled source #
+###################
+bin
+lib
+out
+target
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
 
-*.pydevproject
-.project
-.metadata
-bin/
-tmp/
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
-.classpath
-.settings/
-.loadpath
+# Git #
+#######
+.git
 
-# External tool builders
-.externalToolBuilders/
+# Packages #
+############
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
 
-# Locally stored "Eclipse launch configurations"
-*.launch
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
 
-# CDT-specific
-.cproject
-
-# PDT-specific
-.buildpath
-
-
-#############
-## Windows detritus
-#############
-
-# Windows image file caches
-Thumbs.db
-ehthumbs.db
-
-# Folder config file
-Desktop.ini
-
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
-
-# Mac crap
+# OS generated files #
+######################
 .DS_Store
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Build files #
+#################
+MANIFEST.MF
+dependency-reduced-pom.xml
+
+# Project files #
+#################
+.classpath
+.externalToolBuilders
+.idea
+.project
+.settings
+build
+dist
+nbproject
+atlassian-ide-plugin.xml
+build.xml
+nb-configuration.xml
+*.iml
+*.ipr
+*.iws
+
+# Misc files #
+##############
+*.bak
+
+# Spout runtime folders #
+#########################
+/cache
+/config
+/data
+/logs
+/plugins
+/resources
+/update
+/worlds
