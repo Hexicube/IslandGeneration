@@ -225,6 +225,86 @@ public class IslePopulator extends BlockPopulator
 		return tileData;
 	}
 	
+	private int[][][] genIslandDataPair(int size, Random rand)
+	{
+		int tileSize = 6+rand.nextInt(5);
+		int[][][] tileData = new int[2][size][size];
+		int subsize = size*tileSize;
+		int radiusSteps = Math.min(subsize, subsize)/15;
+		int[][][] data = new int[2][subsize][subsize];
+		ArrayList<int[]> steps = new ArrayList<int[]>();
+		steps.add(new int[]{(int)(subsize*0.5), (int)(subsize*0.5), radiusSteps*5});
+		while(steps.size() > 0)
+		{
+			int[] step = steps.remove(0);
+			if(step[2] > radiusSteps/1.3)
+			{
+				double mult = 0.85+rand.nextDouble()*0.25;
+				mult *= 1-((double)step[2]/(double)(radiusSteps*5))/4;
+				double mult2 = 1.2+rand.nextDouble()*0.8;
+				if(rand.nextInt(7) == 1) mult *= step[2]/radiusSteps;
+				int stepSqrd = step[2]*step[2];
+				for(int x = 0; x < step[2]; x++)
+				{
+					for(int y = 0; y < step[2]; y++)
+					{
+						double distSqrd = (step[2]*0.5-x)*(step[2]*0.5-x)+(step[2]*0.5-y)*(step[2]*0.5-y);
+						if(distSqrd < stepSqrd*0.25)
+						{
+							double strength = (1.0-distSqrd/stepSqrd*4)*((step[2]==radiusSteps*5)?0.1:0.065)*mult;
+							int xPos = (int)(x+step[0]-step[2]*0.5);
+							int yPos = (int)(y+step[1]-step[2]*0.5);
+							int val = data[0][xPos][yPos];
+							val += strength*255;
+							if(val > 2500) val = 2500;
+							data[0][xPos][yPos] = val;
+							strength = (1.0-distSqrd/stepSqrd*4)*((step[2]==radiusSteps*5)?0.1:0.065)*mult2;
+							val = data[1][xPos][yPos];
+							val += strength*255;
+							if(val > 3500) val = 3500;
+							data[1][xPos][yPos] = val;
+						}
+					}
+				}
+				int factor = 4+rand.nextInt(4);
+				for(int a = 0; a < factor; a++)
+				{
+					double angle = (double)rand.nextInt(360)/180*Math.PI;
+					steps.add(new int[]{(int)((double)step[0]+Math.cos(angle)*(double)step[2]*0.5), (int)((double)step[1]+Math.sin(angle)*(double)step[2]*0.5), step[2]-(int)(radiusSteps*(1+rand.nextDouble()*0.2))});
+				}
+			}
+		}
+		for(int x = 0; x < size; x++)
+		{
+			for(int y = 0; y < size; y++)
+			{
+				float strength = 0;
+				for(int x2 = 0; x2 < tileSize; x2++)
+				{
+					for(int y2 = 0; y2 < tileSize; y2++)
+					{
+						int val = data[0][x*tileSize+x2][y*tileSize+y2];
+						strength += (float)val/(float)(tileSize*tileSize);
+					}
+				}
+				int value = (int)strength;
+				tileData[0][x][y] = value;
+				strength = 0;
+				for(int x2 = 0; x2 < tileSize; x2++)
+				{
+					for(int y2 = 0; y2 < tileSize; y2++)
+					{
+						int val = data[1][x*tileSize+x2][y*tileSize+y2];
+						strength += (float)val/(float)(tileSize*tileSize);
+					}
+				}
+				value = (int)strength;
+				tileData[1][x][y] = value;
+			}
+		}
+		return tileData;
+	}
+	
 	private ChunkSection getChunkSection(World world, int x, int y, int z)
 	{
 		Chunk c = world.getChunkAt(x>>4, z>>4);
@@ -1512,13 +1592,13 @@ public class IslePopulator extends BlockPopulator
 			else islandType = Biome.OCEAN;
 		}
 		int size = rand.nextInt(111)+70;
-		float heightMult = rand.nextFloat()/2.0f+0.75f;
+		float heightMult = rand.nextFloat()*0.5f+0.75f;
 		if(islandType == Biome.OCEAN)
 		{
-			if(heightMult < 1) heightMult *= 1.5f;
-			if(size < 140) size = 140;
+			heightMult *= 1.5f;
+			size *= 1.5;
 		}
-		int[][] tileData = genIslandData(size, rand);
+		int[][][] tileData = genIslandDataPair(size, rand);
 		int startX = chunk.getX()*16+8 - size/2;
 		int startY = IslandWorldGeneration.islandStartY+rand.nextInt(61);
 		int startZ = chunk.getZ()*16+8 - size/2;
@@ -1534,12 +1614,12 @@ public class IslePopulator extends BlockPopulator
 		{
 			for(int z = 0; z < size; z++)
 			{
-				if(tileData[x][z] > 10)
+				if(tileData[0][x][z] > 10 || tileData[1][x][z] > 25)
 				{
 					if(IslandWorldGeneration.parentGen.equals("")) world.setBiome(startX+x, startZ+z, islandType);
 					if(islandType == Biome.OCEAN)
 					{
-						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/8));
+						int upAmount = (int)((tileData[0][x][z]-(tileData[0][x-1][z]+tileData[0][x+1][z]+tileData[0][x][z-1]+tileData[0][x][z+1])/16));
 						upAmount = (int)((Math.sin(upAmount/77.12+Math.PI/2)*81-upAmount/5-60)*size*heightMult/1000);
 						int total = 0;
 						for(int x2 = -4; x2 <= 4; x2++)
@@ -1548,7 +1628,7 @@ public class IslePopulator extends BlockPopulator
 							{
 								try
 								{
-									total += tileData[x+x2][z+z2];
+									total += tileData[1][x+x2][z+z2];
 								}
 								catch(IndexOutOfBoundsException e){}
 							}
@@ -1562,10 +1642,9 @@ public class IslePopulator extends BlockPopulator
 							int distFromTop = upAmount-y;
 							int distFromBottom = downAmount+y;
 							int blockY = startY+y;
-							if(upAmount < 2)
 							{
 								if(distFromBottom > 0 && distFromTop < 3) setBlock(world, blockX, blockY, blockZ, Material.SAND.getId());
-								else if(distFromTop < 4) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
+								else if(distFromTop < 6) setBlock(world, blockX, blockY, blockZ, Material.SANDSTONE.getId());
 								else setBlock(world, blockX, blockY, blockZ, Material.STONE.getId());
 								if(distFromTop == 0 && rand.nextDouble() < 0.01*IslandWorldGeneration.rarityModifiers[10]) clayPatches.add(new int[]{blockX, blockY, blockZ});
 								if(y == 0 && distFromTop == 0 && rand.nextDouble() < 0.1*IslandWorldGeneration.rarityModifiers[11]) sugarCane.add(new int[]{blockX, blockY+1, blockZ});
@@ -1602,7 +1681,7 @@ public class IslePopulator extends BlockPopulator
 					}
 					else
 					{
-						int upAmount = (int)((tileData[x][z]-(tileData[x-1][z]+tileData[x+1][z]+tileData[x][z-1]+tileData[x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
+						int upAmount = (int)((tileData[0][x][z]-(tileData[0][x-1][z]+tileData[0][x+1][z]+tileData[0][x][z-1]+tileData[0][x][z+1])/16)*size*heightMult/(flatIsland?12000:2000));
 						int total = 0;
 						for(int x2 = -4; x2 <= 4; x2++)
 						{
@@ -1610,7 +1689,7 @@ public class IslePopulator extends BlockPopulator
 							{
 								try
 								{
-									total += tileData[x+x2][z+z2];
+									total += tileData[1][x+x2][z+z2];
 								}
 								catch(IndexOutOfBoundsException e){}
 							}
@@ -2002,7 +2081,7 @@ public class IslePopulator extends BlockPopulator
 		}
 		if(flatIsland && islandType == Biome.PLAINS && rand.nextInt(3) == 1)
 		{
-			createVillage(world, startX, startY, startZ, tileData, heightMult, rand);
+			createVillage(world, startX, startY, startZ, tileData[0], heightMult, rand);
 		}
 		while(chunksToReload.size() > 0)
 		{
