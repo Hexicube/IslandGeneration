@@ -7,4 +7,4 @@ commands:
     description: Island Generation command
     usage: /islegen [data|chancemod|islechance]
     permission: 
-    permission-message: You do not have permission to do that!
+    permission-message: You do not have permission to do that! 
