@@ -49,7 +49,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("island.spacing", islandSpacing);
 		islandStartY = getConfig().getInt("island.height", 150);
 		getConfig().set("island.height", islandStartY);
-		rarityModifiers = new double[13];
+		rarityModifiers = new double[14];
 		rarityModifiers[0] = getConfig().getDouble("rarity.coalore", 1);
 		getConfig().set("rarity.coalore", rarityModifiers[0]);
 		rarityModifiers[1] = getConfig().getDouble("rarity.ironore", 1);
@@ -76,6 +76,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("rarity.sugarcane", rarityModifiers[11]);
 		rarityModifiers[12] = getConfig().getDouble("rarity.glowstone", 1);
 		getConfig().set("rarity.glowstone", rarityModifiers[12]);
+		rarityModifiers[13] = getConfig().getDouble("rarity.lapisore", 1);
+		getConfig().set("rarity.lapisore", rarityModifiers[13]);
 		
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
@@ -157,6 +159,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		oreList.add(new PlacableOre(Material.EMERALD_ORE.getId(), 0, 4, 8, generalReplacableBlocks, 0.000025*IslandWorldGeneration.rarityModifiers[5]));
 		oreList.add(new PlacableOre(Material.QUARTZ_ORE.getId(), 0, 3, 15, netherReplacableBlocks, 0.001*IslandWorldGeneration.rarityModifiers[9]));
 		oreList.add(new PlacableOre(Material.GLOWSTONE.getId(), 0, 15, 70, netherReplacableBlocks, 0.0001*IslandWorldGeneration.rarityModifiers[12]));
+		oreList.add(new PlacableOre(Material.LAPIS_ORE.getId(), 0, 2, 10, generalReplacableBlocks, 0.0001*IslandWorldGeneration.rarityModifiers[13]));
 		try
 		{
 			YamlConfiguration y;
@@ -249,6 +252,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					sender.sendMessage("[IsleWorldGen]   Iron ore: "+rarityModifiers[1]);
 					sender.sendMessage("[IsleWorldGen]   Gold ore: "+rarityModifiers[2]);
 					sender.sendMessage("[IsleWorldGen]   Redstone ore: "+rarityModifiers[3]);
+					sender.sendMessage("[IsleWorldGen]   Lapis ore: "+rarityModifiers[13]);
 					sender.sendMessage("[IsleWorldGen]   Diamond ore: "+rarityModifiers[4]);
 					sender.sendMessage("[IsleWorldGen]   Emerald ore: "+rarityModifiers[5]);
 					sender.sendMessage("[IsleWorldGen]   Quartz ore: "+rarityModifiers[9]);
