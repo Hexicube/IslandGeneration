@@ -123,6 +123,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		saveConfig();
 		
 		loadOres();
+		loadStructures();
 		
 		if(taskRepeatTimer > 0)
 		{
@@ -144,6 +145,35 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	{
 		if(taskRepeatTimer > 0) getServer().getScheduler().cancelTask(taskID);
 		enabled = false;
+	}
+	
+	private void loadStructures()
+	{
+		IslePopulator.schematics = new ArrayList<Schematic>();
+		File f = new File(getDataFolder().getAbsolutePath()+File.separator+"houses");
+		System.out.println(f.getAbsolutePath());
+		File[] files = f.listFiles();
+		if(files != null)
+		{
+			for(int a = 0; a < files.length; a++)
+			{
+				try
+				{
+					Schematic s = new Schematic(files[a].getName(), files[a]);
+					if(s.valid) IslePopulator.schematics.add(s);
+					else throw new Exception("File invalid!");
+				}
+				catch (Exception e)
+				{
+					getLogger().warning("Invalid house NBT file: "+f.getName());
+					getLogger().warning(e.getMessage());
+				}
+			}
+		}
+		if(IslePopulator.schematics.size() == 0)
+		{
+			IslePopulator.schematics = null;
+		}
 	}
 	
 	private void loadOres()

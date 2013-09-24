@@ -34,115 +34,9 @@ public class IslePopulator extends BlockPopulator
 	private ArrayList<net.minecraft.server.v1_6_R2.Chunk> chunksToReload;
 	private UsedSections lastUsedSections;
 	
-	private static ArrayList<Schematic> schematics;
+	public static ArrayList<Schematic> schematics;
 	
 	public static PlacableOre[] placableOres;
-	
-	/*public static void interpretSchematic(String data)
-	{
-		String[] data2 = data.split("=");
-		if(data2.length < 4)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Missing data.");
-			return;
-		}
-		String[] materials = data2[1].split(";");
-		Schematic s = new Schematic();
-		s.materialList = new int[materials.length];
-		s.materialListData = new int[materials.length];
-		for(int a = 0; a < materials.length; a++)
-		{
-			int id = 0, dmg = 0;
-			try
-			{
-				String[] data3 = materials[a].split("\\.");
-				id = Integer.parseInt(data3[0]);
-				if(data3.length > 1) dmg = Integer.parseInt(data3[1]);
-			}
-			catch(NumberFormatException e)
-			{
-				System.out.println("Invalid schematic: "+data);
-				System.out.println("Reason: Bad number for material.");
-				return;
-			}
-			s.materialList[a] = id;
-			s.materialListData[a] = dmg;
-		}
-		String[] data3 = data2[2].split("\\.");
-		if(data3.length < 3)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Bad size.");
-			return;
-		}
-		try
-		{
-			s.width = Integer.parseInt(data3[0]);
-			s.height = Integer.parseInt(data3[1]);
-			s.depth = Integer.parseInt(data3[2]);
-		}
-		catch(NumberFormatException e)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Bad size.");
-			return;
-		}
-		if(s.width < 1 || s.height < 1 || s.depth < 1)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Bad size.");
-			return;
-		}
-		s.structure = new int[s.width][s.height][s.depth];
-		data3 = data2[3].split("\\.");
-		if(data3.length < s.width*s.height*s.depth)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Bad structure data.");
-			return;
-		}
-		int pos = 0;
-		for(int x = 0; x < s.width; x++)
-		{
-			for(int y = 0; y < s.height; y++)
-			{
-				for(int z = 0; z < s.depth; z++)
-				{
-					try
-					{
-						s.structure[x][y][z] = Integer.parseInt(data3[pos++]);
-					}
-					catch(NumberFormatException e)
-					{
-						System.out.println("Invalid schematic: "+data);
-						System.out.println("Reason: Bad structure data.");
-						return;
-					}
-				}
-			}
-		}
-		data3 = data2[0].split("\\.");
-		try
-		{
-			s.weight = Integer.parseInt(data3[0]);
-			s.offset = Integer.parseInt(data3[1]);
-		}
-		catch(NumberFormatException e)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Bad initial data.");
-			return;
-		}
-		catch(IndexOutOfBoundsException e)
-		{
-			System.out.println("Invalid schematic: "+data);
-			System.out.println("Reason: Bad initial data.");
-			return;
-		}
-		if(schematics == null) schematics = new ArrayList<Schematic>();
-		schematics.add(s);
-	}*/
 	
 	@SuppressWarnings("unchecked")
 	private void sendChunkToClient(Chunk chunk, Player player)
@@ -402,10 +296,11 @@ public class IslePopulator extends BlockPopulator
 		chunksection.setData(x & 15, y & 15, z & 15, data);
 	}
 	
-	private boolean setAirIfAllowed(World world, int x, int y, int z, boolean dungeonGen)
+	private boolean canSetAir(World world, int x, int y, int z, boolean dungeonGen)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
-		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.STONE.getId() ||
+		if(chunksection.getTypeId(x & 15, y & 15, z & 15) == 0 ||
+		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.STONE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.COBBLESTONE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.MOSSY_COBBLESTONE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.DIRT.getId() ||
@@ -429,6 +324,16 @@ public class IslePopulator extends BlockPopulator
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.EMERALD_ORE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.QUARTZ_ORE.getId() ||
 		   chunksection.getTypeId(x & 15, y & 15, z & 15) == Material.GLOWSTONE.getId())
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean setAirIfAllowed(World world, int x, int y, int z, boolean dungeonGen)
+	{
+		ChunkSection chunksection = getChunkSection(world, x, y, z);
+		if(canSetAir(world, x, y, z, dungeonGen))
 		{
 			chunksection.setTypeId(x & 15, y & 15, z & 15, 0);
 			chunksection.setData(x & 15, y & 15, z & 15, 0);
@@ -1152,7 +1057,8 @@ public class IslePopulator extends BlockPopulator
 	
 	private void createVillage(World world, int islandX, int islandY, int islandZ, int[][] tileData, float heightMult, Random rand)
 	{
-		if(schematics == null)
+		boolean[][] spaceTaken = new boolean[tileData.length][tileData[0].length];
+		if(schematics == null || schematics.size() == 0)
 		{
 			System.out.println("Tried to create village without loaded schematics!");
 			return;
@@ -1173,7 +1079,7 @@ public class IslePopulator extends BlockPopulator
 			int yPos;
 			try
 			{
-				yPos = islandY+(int)((tileData[position[0]][position[1]]-(tileData[position[0]-1][position[1]]+tileData[position[0]+1][position[1]]+tileData[position[0]][position[1]-1]+tileData[position[0]][position[1]+1])/16)*tileData.length*heightMult/12000);;
+				yPos = islandY+(int)((tileData[position[0]][position[1]]-(tileData[position[0]-1][position[1]]+tileData[position[0]+1][position[1]]+tileData[position[0]][position[1]-1]+tileData[position[0]][position[1]+1])/16)*tileData.length*heightMult/12000);
 			}
 			catch(IndexOutOfBoundsException e)
 			{
@@ -1191,28 +1097,57 @@ public class IslePopulator extends BlockPopulator
 			yPos += s.offset;
 			boolean found = false;
 			int left = s.width/2, right = (s.width-1)/2;
-			int back = s.depth/2, forward = (s.depth-1)/2;
+			int back = s.length/2, forward = (s.length-1)/2;
+			for(int x2 = position[0]-left; x2 <= position[0]+right; x2++)
+			{
+				for(int z2 = position[1]-back; z2 <= position[1]+forward; z2++)
+				{
+					try
+					{
+						if(spaceTaken[x2][z2]) found = true;
+					}
+					catch(IndexOutOfBoundsException e)
+					{
+						found = true;
+					}
+				}
+			}
 			int up = s.height-1;
-			for(int y1 = -2; y1 <= 2 && !found; y1++)
+			/*for(int y1 = -2; y1 <= 2 && !found; y1++)
 			{
 				if(getBlock(world, xPos, yPos+y1, zPos) == Material.WOOD.getId()) found = true;
+				if(found) break;
 				if(getBlock(world, xPos+right, yPos+y1, zPos+back) == Material.WOOD.getId()) found = true;
+				if(found) break;
 				if(getBlock(world, xPos-left, yPos+y1, zPos+back) == Material.WOOD.getId()) found = true;
+				if(found) break;
 				if(getBlock(world, xPos+right, yPos+y1, zPos-forward) == Material.WOOD.getId()) found = true;
+				if(found) break;
 				if(getBlock(world, xPos-left, yPos+y1, zPos-forward) == Material.WOOD.getId()) found = true;
-			}
+			}*/
 			if(found) continue;
-			if(getBlock(world, xPos, yPos+up+2, zPos) != 0) continue;
-			if(getBlock(world, xPos+right, yPos+up+2, zPos+back) != 0) continue;
-			if(getBlock(world, xPos-left, yPos+up+2, zPos+back) != 0) continue;
-			if(getBlock(world, xPos+right, yPos+up+2, zPos-forward) != 0) continue;
-			if(getBlock(world, xPos-left, yPos+up+2, zPos-forward) != 0) continue;
-			if(getBlock(world, xPos, yPos-1, zPos) == 0) continue;
-			if(getBlock(world, xPos+right, yPos-1, zPos+back) == 0) continue;
-			if(getBlock(world, xPos-left, yPos-1, zPos+back) == 0) continue;
-			if(getBlock(world, xPos+right, yPos-1, zPos-forward) == 0) continue;
-			if(getBlock(world, xPos-left, yPos-1, zPos-forward) == 0) continue;
+			if(!canSetAir(world, xPos, yPos+up+2, zPos, false)) continue;
+			if(!canSetAir(world, xPos+right, yPos+up+2, zPos+back, false)) continue;
+			if(!canSetAir(world, xPos-left, yPos+up+2, zPos+back, false)) continue;
+			if(!canSetAir(world, xPos+right, yPos+up+2, zPos-forward, false)) continue;
+			if(!canSetAir(world, xPos-left, yPos+up+2, zPos-forward, false)) continue;
+			if(!Material.getMaterial(getBlock(world, xPos, yPos-1, zPos)).isSolid()) continue;
+			if(!Material.getMaterial(getBlock(world, xPos+right, yPos-1, zPos+back)).isSolid()) continue;
+			if(!Material.getMaterial(getBlock(world, xPos-left, yPos-1, zPos+back)).isSolid()) continue;
+			if(!Material.getMaterial(getBlock(world, xPos+right, yPos-1, zPos-forward)).isSolid()) continue;
+			if(!Material.getMaterial(getBlock(world, xPos-left, yPos-1, zPos-forward)).isSolid()) continue;
 			count++;
+			for(int x2 = position[0]-left-1; x2 <= position[0]+right+1; x2++)
+			{
+				for(int z2 = position[1]-back-1; z2 <= position[1]+forward+1; z2++)
+				{
+					try
+					{
+						spaceTaken[x2][z2] = true;
+					}
+					catch(IndexOutOfBoundsException e){}
+				}
+			}
 			for(int x2 = 0; x2 <= left+right; x2++)
 			{
 				for(int z2 = 0; z2 <= back+forward; z2++)
@@ -1220,14 +1155,26 @@ public class IslePopulator extends BlockPopulator
 					for(int y2 = 0; y2 <= up; y2++)
 					{
 						int dataID = s.structure[x2][y2][z2];
-						if(dataID != -1) setBlockWithData(world, xPos+x2-left, yPos+y2, zPos+z2-forward, s.materialList[dataID], s.materialListData[dataID]);
+						if(dataID != -1)
+						{
+							//if(y2 > -s.offset || s.materialList[dataID] != 0)
+							{
+								setBlockWithData(world, xPos+x2-left, yPos+y2, zPos+z2-forward, s.materialList[dataID], s.materialListData[dataID]);
+							}
+						}
 					}
 				}
 			}
-			positions.add(new int[]{position[0]+right+2+rand.nextInt(4), position[1]-2-forward-rand.nextInt(4)});
-			positions.add(new int[]{position[0]-2-left-rand.nextInt(4), position[1]-2-forward-rand.nextInt(4)});
-			positions.add(new int[]{position[0]+2+right+rand.nextInt(4), position[1]+2+back+rand.nextInt(4)});
-			positions.add(new int[]{position[0]-2-left-rand.nextInt(4), position[1]+2+back+rand.nextInt(4)});
+			//TODO: handle path
+			positions.add(new int[]{position[0]+right*2+2+rand.nextInt(4), position[1]-2-forward*2-rand.nextInt(4)});
+			positions.add(new int[]{position[0]-2-left*2-rand.nextInt(4), position[1]-2-forward*2-rand.nextInt(4)});
+			positions.add(new int[]{position[0]+2+right*2+rand.nextInt(4), position[1]+2+back*2+rand.nextInt(4)});
+			positions.add(new int[]{position[0]-2-left*2-rand.nextInt(4), position[1]+2+back*2+rand.nextInt(4)});
+			if(count >= 1000)
+			{
+				System.out.println("WARNING: Capped village house count at 1000! This shouldn't happen!");
+				break;
+			}
 		}
 		System.out.println("Placed a "+count+"-house village at: "+islandX+"/"+islandY+"/"+islandZ);
 	}
