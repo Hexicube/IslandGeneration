@@ -1,6 +1,6 @@
 package org.tilegames.hexicube.bukkit.isle;
 
-import net.minecraft.server.v1_6_R2.ChunkSection;
+import net.minecraft.server.v1_6_R3.ChunkSection;
 
 public class UsedSections
 {

@@ -19,6 +19,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.generator.ChunkGenerator;
+import org.mcstats.Metrics;
+import org.mcstats.Metrics.Graph;
+import org.mcstats.Metrics.Plotter;
 
 public final class IslandWorldGeneration extends JavaPlugin implements Listener
 {
@@ -27,6 +30,9 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	public static int[] islandChances;
 	public static int islandTotalChance;
 	public static double dungeonChance, grassChance, flowerChance;
+	public static boolean coverSnowWithGrass;
+	
+	public static boolean pigZombieSpawners, endPortals, netherPortals, obsidianPillars;
 	
 	public static boolean enabled;
 	
@@ -110,10 +116,21 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 			islandTotalChance += islandChances[a];
 		}
 		
+		coverSnowWithGrass = getConfig().getBoolean("rarity.grass.coversnow", false);
+		getConfig().set("rarity.grass.coversnow", coverSnowWithGrass);
 		grassChance = getConfig().getDouble("rarity.grass.coverchance", 0.4);
 		getConfig().set("rarity.grass.coverchance", grassChance);
 		flowerChance = getConfig().getDouble("rarity.grass.flowerchance", 0.15);
 		getConfig().set("rarity.grass.flowerchance", flowerChance);
+		
+		pigZombieSpawners = getConfig().getBoolean("features.pigzombiespawners", true);
+		getConfig().set("features.pigzombiespawners", pigZombieSpawners);
+		endPortals = getConfig().getBoolean("features.endportals", true);
+		getConfig().set("features.endportals", endPortals);
+		netherPortals = getConfig().getBoolean("features.netherportals", true);
+		getConfig().set("features.netherportals", netherPortals);
+		obsidianPillars = getConfig().getBoolean("features.obsidiantowers", true);
+		getConfig().set("features.obsidiantowers", obsidianPillars);
 		
 		taskRepeatTimer = getConfig().getInt("minutes_between_update_checks", 15);
 		getConfig().set("minutes_between_update_checks", taskRepeatTimer);
@@ -137,6 +154,108 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 				e.printStackTrace();
 				getLogger().severe("Error with starting update checker, disabling!");
 			}
+		}
+		
+		try
+		{
+			Metrics m = new Metrics(this);
+			Graph g = m.createGraph("Island Chances");
+			g.addPlotter(new Plotter("Plains"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[0]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Forest"){
+				public int getValue()
+				{
+					return islandTotalChance==0?1000:islandChances[1]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Taiga"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[2]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Swamp"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[3]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Jungle"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[4]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Desert"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[5]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Nether"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[6]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Ender"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[7]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Mushroom"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[8]*1000/islandTotalChance;
+				}
+			});
+			g.addPlotter(new Plotter("Ocean"){
+				public int getValue()
+				{
+					return islandTotalChance==0?0:islandChances[9]*1000/islandTotalChance;
+				}
+			});
+			m.addGraph(g);
+			g = m.createGraph("Island Positions");
+			g.addPlotter(new Plotter("Spacing"){
+				public int getValue()
+				{
+					return islandSpacing;
+				}
+			});
+			g.addPlotter(new Plotter("Height"){
+				public int getValue()
+				{
+					return islandStartY;
+				}
+			});
+			m.addGraph(g);
+			g = m.createGraph("Number of Custom Ores");
+			g.addPlotter(new Plotter("Count"){
+				public int getValue()
+				{
+					return IslePopulator.placableOres.length-9;
+				}
+			});
+			m.addGraph(g);
+			g = m.createGraph("Plugin Version");
+			g.addPlotter(new Plotter(getDescription().getVersion()){
+				public int getValue()
+				{
+					return 1;
+				}
+			});
+			m.addGraph(g);
+			m.start();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
 		}
 	}
 	
@@ -176,6 +295,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void loadOres()
 	{
 		ArrayList<PlacableOre> oreList = new ArrayList<PlacableOre>();
@@ -363,6 +483,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private int getMaterialID(String s)
 	{
 		try

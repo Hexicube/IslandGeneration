@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import net.minecraft.server.v1_6_R2.NBTTagCompound;
-import net.minecraft.server.v1_6_R2.TileEntity;
-import net.minecraft.server.v1_6_R2.TileEntityChest;
+import net.minecraft.server.v1_6_R3.NBTTagCompound;
+import net.minecraft.server.v1_6_R3.TileEntity;
+import net.minecraft.server.v1_6_R3.TileEntityChest;
 
 import org.bukkit.World;
 import org.tilegames.hexicube.nbtreader.*;
@@ -191,9 +191,10 @@ public class Schematic
 		return null;
 	}
 	
+	@SuppressWarnings("unused")
 	private void populateChestEntity(TileEntityChest entity, NBTCompound tag)
 	{
-		
+		//TODO
 	}
 	
 	public void paste(World world, int x, int y, int z)

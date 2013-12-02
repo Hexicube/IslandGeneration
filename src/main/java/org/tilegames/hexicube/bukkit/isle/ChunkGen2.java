@@ -23,12 +23,14 @@ public class ChunkGen2 extends ChunkGenerator
 		return parent.generate(world, random, chunkX, chunkZ);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public byte[][] generateBlockSections(World world, Random random, int chunkX, int chunkZ, BiomeGrid biomeGrid)
 	{
 		return parent.generateBlockSections(world, random, chunkX, chunkZ, biomeGrid);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public short[][] generateExtBlockSections(World world, Random random, int chunkX, int chunkZ, BiomeGrid biomeGrid)
 	{

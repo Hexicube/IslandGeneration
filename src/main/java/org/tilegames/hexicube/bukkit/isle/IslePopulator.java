@@ -6,12 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.server.v1_6_R2.ChunkCoordIntPair;
-import net.minecraft.server.v1_6_R2.ChunkSection;
-import net.minecraft.server.v1_6_R2.NBTTagCompound;
-import net.minecraft.server.v1_6_R2.TileEntity;
-import net.minecraft.server.v1_6_R2.TileEntityChest;
-import net.minecraft.server.v1_6_R2.TileEntityMobSpawner;
+import net.minecraft.server.v1_6_R3.ChunkCoordIntPair;
+import net.minecraft.server.v1_6_R3.ChunkSection;
+import net.minecraft.server.v1_6_R3.NBTTagCompound;
+import net.minecraft.server.v1_6_R3.TileEntity;
+import net.minecraft.server.v1_6_R3.TileEntityChest;
+import net.minecraft.server.v1_6_R3.TileEntityMobSpawner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -19,10 +19,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.craftbukkit.v1_6_R2.CraftChunk;
-import org.bukkit.craftbukkit.v1_6_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_6_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_6_R3.CraftChunk;
+import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_6_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.BlockPopulator;
@@ -31,7 +31,7 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
 public class IslePopulator extends BlockPopulator
 {
-	private ArrayList<net.minecraft.server.v1_6_R2.Chunk> chunksToReload;
+	private ArrayList<net.minecraft.server.v1_6_R3.Chunk> chunksToReload;
 	private UsedSections lastUsedSections;
 	
 	public static ArrayList<Schematic> schematics;
@@ -208,7 +208,7 @@ public class IslePopulator extends BlockPopulator
 		   lastUsedSections.chunkZ == z>>4) usedSections = lastUsedSections;
 		if(usedSections == null)
 		{
-			net.minecraft.server.v1_6_R2.Chunk chunk = ((CraftChunk)c).getHandle();
+			net.minecraft.server.v1_6_R3.Chunk chunk = ((CraftChunk)c).getHandle();
 			chunksToReload.add(chunk);
 			Field f = null;
 			try
@@ -296,6 +296,7 @@ public class IslePopulator extends BlockPopulator
 		chunksection.setData(x & 15, y & 15, z & 15, data);
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean canSetAir(World world, int x, int y, int z, boolean dungeonGen)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
@@ -330,6 +331,7 @@ public class IslePopulator extends BlockPopulator
 		return false;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean setAirIfAllowed(World world, int x, int y, int z, boolean dungeonGen)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
@@ -350,6 +352,7 @@ public class IslePopulator extends BlockPopulator
 		return false;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void setFluid(World world, int x, int y, int z, boolean lava, boolean neighbourStone)
 	{
 		int fluid = lava?Material.LAVA.getId():Material.WATER.getId();
@@ -398,6 +401,7 @@ public class IslePopulator extends BlockPopulator
 		return setBlockIfAlreadyAirWithData(world, x, y, z, id, 0);
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean setBlockIfAlreadyAirWithData(World world, int x, int y, int z, int id, int data)
 	{
 		ChunkSection chunksection = getChunkSection(world, x, y, z);
@@ -412,6 +416,7 @@ public class IslePopulator extends BlockPopulator
 		return false;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean placeBasicTree(World world, int x, int y, int z, Random rand)
 	{
 		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
@@ -448,6 +453,7 @@ public class IslePopulator extends BlockPopulator
 		return true;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean placeJungleTree(World world, int x, int y, int z, Random rand)
 	{
 		boolean bush = rand.nextBoolean();
@@ -513,6 +519,7 @@ public class IslePopulator extends BlockPopulator
 		return true;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean placeSwampTree(World world, int x, int y, int z, Random rand)
 	{
 		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
@@ -610,6 +617,7 @@ public class IslePopulator extends BlockPopulator
 		return true;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean placeRedwoodTree(World world, int x, int y, int z, Random rand)
 	{
 		if(getBlock(world, x+2, y+3, z+2) == Material.LEAVES.getId()) return false;
@@ -699,6 +707,7 @@ public class IslePopulator extends BlockPopulator
 		return true;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void placeMushroomTree(World world, int x, int y, int z, Random rand)
 	{
 		boolean brownTree = rand.nextBoolean();
@@ -773,6 +782,7 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void placePool(World world, int poolX, int poolY, int poolZ, boolean lava, boolean stoneEdge, Random rand)
 	{
 		int size = stoneEdge?(rand.nextInt(21)+10):(rand.nextInt(8)+8);
@@ -812,6 +822,7 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void gravelBlob(World world, int poolX, int poolY, int poolZ, Random rand)
 	{
 		int size = rand.nextInt(11)+5;
@@ -1055,6 +1066,7 @@ public class IslePopulator extends BlockPopulator
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void createVillage(World world, int islandX, int islandY, int islandZ, int[][] tileData, float heightMult, Random rand)
 	{
 		boolean[][] spaceTaken = new boolean[tileData.length][tileData[0].length];
@@ -1179,6 +1191,7 @@ public class IslePopulator extends BlockPopulator
 		System.out.println("Placed a "+count+"-house village at: "+islandX+"/"+islandY+"/"+islandZ);
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void generateLinkedDungeons(World world, int x, int y, int z, int count, Random rand)
 	{
 		int placedRooms = 0;
@@ -1507,12 +1520,13 @@ public class IslePopulator extends BlockPopulator
 		addTileEntity(world, c);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void populate(World world, Random rand, Chunk chunk)
 	{
 		if((chunk.getX()%(IslandWorldGeneration.islandSpacing*2) != 0 || chunk.getZ()%(IslandWorldGeneration.islandSpacing*2) != 0) &&
 		   (Math.abs(chunk.getX())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing || Math.abs(chunk.getZ())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing)) return;
-		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R2.Chunk>();
+		chunksToReload = new ArrayList<net.minecraft.server.v1_6_R3.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean flatIsland = rand.nextInt(17) < 5;
 		boolean islandValidSpawn = false;
@@ -1662,7 +1676,7 @@ public class IslePopulator extends BlockPopulator
 									{
 										setBlock(world, blockX, blockY, blockZ, Material.SOUL_SAND.getId());
 									}
-									else if(distFromTop == 0 && rand.nextInt(50) == 15)
+									else if(IslandWorldGeneration.pigZombieSpawners && distFromTop == 0 && rand.nextInt(50) == 15)
 									{
 										setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
 										TileEntityMobSpawner t = new TileEntityMobSpawner();
@@ -1677,7 +1691,7 @@ public class IslePopulator extends BlockPopulator
 										addTileEntity(world, t);
 									}
 									else setBlock(world, blockX, blockY, blockZ, Material.NETHERRACK.getId());
-									if(distFromTop == 0 && rand.nextInt(10000) == 151)
+									if(IslandWorldGeneration.netherPortals && distFromTop == 0 && rand.nextInt(10000) == 151)
 									{
 										if(rand.nextBoolean())
 										{
@@ -1723,7 +1737,7 @@ public class IslePopulator extends BlockPopulator
 									setBlock(world, blockX, blockY, blockZ, Material.ENDER_STONE.getId());
 								if(distFromTop == 0)
 								{
-									if(rand.nextInt(10000) == 151)
+									if(IslandWorldGeneration.endPortals && rand.nextInt(10000) == 151)
 									{
 										if(rand.nextBoolean())
 										{
@@ -1745,7 +1759,7 @@ public class IslePopulator extends BlockPopulator
 											}
 										}
 									}
-									else if(rand.nextInt(4000) == 3117)
+									else if(IslandWorldGeneration.obsidianPillars && rand.nextInt(4000) == 3117)
 									{
 										int towerHeight = 50+rand.nextInt(51);
 										for(int x2 = -2; x2 <= 2; x2++)
@@ -1811,7 +1825,7 @@ public class IslePopulator extends BlockPopulator
 									{
 										if(placeRedwoodTree(world, blockX, blockY+1, blockZ, rand)) islandValidSpawn = true;
 									}
-									else if(rand.nextDouble() < IslandWorldGeneration.grassChance)
+									else if(IslandWorldGeneration.coverSnowWithGrass && rand.nextDouble() < IslandWorldGeneration.grassChance)
 									{
 										if(rand.nextDouble() < IslandWorldGeneration.flowerChance)
 										{
@@ -2032,7 +2046,7 @@ public class IslePopulator extends BlockPopulator
 		}
 		while(chunksToReload.size() > 0)
 		{
-			net.minecraft.server.v1_6_R2.Chunk c = chunksToReload.remove(0);
+			net.minecraft.server.v1_6_R3.Chunk c = chunksToReload.remove(0);
 			c.initLighting();
 			Iterator<Player> players = world.getPlayers().iterator();
 			while(players.hasNext())
