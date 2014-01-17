@@ -1,6 +1,6 @@
 name: IsleWorldGen
 main: org.tilegames.hexicube.bukkit.isle.IslandWorldGeneration
-version: 4.0
+version: 4.1
 load: STARTUP
 commands:
   islegen:

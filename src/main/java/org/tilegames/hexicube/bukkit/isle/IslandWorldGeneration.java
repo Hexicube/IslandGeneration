@@ -20,17 +20,23 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.mcstats.Metrics;
-import org.mcstats.Metrics.Graph;
-import org.mcstats.Metrics.Plotter;
 
 public final class IslandWorldGeneration extends JavaPlugin implements Listener
 {
-	public static int islandSpacing, islandStartY;
+	public static int islandSpacing, islandTotalChance,
+					  minIslandHeight, maxIslandHeight,
+					  maxDungeonSize, dungeonMinChests,
+					  dungeonMaxChests, minIslandSize,
+					  maxIslandSize;
 	public static double[] rarityModifiers;
 	public static int[] islandChances;
-	public static int islandTotalChance;
-	public static double dungeonChance, grassChance, flowerChance;
+	public static double dungeonChance, grassChance, flowerChance,
+						 islandHeightScalar, islandUnderbellyScalar,
+						 dungeonExtraDoorChance;
 	public static boolean coverSnowWithGrass;
+	
+	public static int waterLevel = 0, waterBlock = 0; //TODO: improve
+	
 	
 	public static boolean pigZombieSpawners, endPortals, netherPortals, obsidianPillars;
 	
@@ -47,14 +53,29 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	public void onEnable()
 	{
 		enabled = true;
-		
-		//IslePopulator.interpretSchematic("1.1=5.0=3.3.3=0.0.0.0.0.0.-1.0.-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.-1.0.-1");
-		//IslePopulator.interpretSchematic("1.0=5.1=5.1.5=-1.-1.0.-1.-1.-1.0.0.0.-1.0.0.0.0.0.-1.0.0.0.-1.-1.-1.0.-1.-1");
-		
 		islandSpacing = getConfig().getInt("island.spacing", 8);
 		getConfig().set("island.spacing", islandSpacing);
-		islandStartY = getConfig().getInt("island.height", 150);
-		getConfig().set("island.height", islandStartY);
+		islandHeightScalar = getConfig().getDouble("island.heightscale", 1);
+		getConfig().set("island.heightscale", islandHeightScalar);
+		islandUnderbellyScalar = getConfig().getDouble("island.underbellyscale", 1);
+		getConfig().set("island.underbellyscale", islandUnderbellyScalar);
+		if(getConfig().isSet("island.height") && getConfig().isInt("island.height"))
+		{
+			int islandStartY = getConfig().getInt("island.height", 150);
+			minIslandHeight = islandStartY;
+			maxIslandHeight = islandStartY+60;
+		}
+		else
+		{
+			minIslandHeight = getConfig().getInt("island.height.low", 150);
+			maxIslandHeight = getConfig().getInt("island.height.high", 210);
+		}
+		getConfig().set("island.height.low", minIslandHeight);
+		getConfig().set("island.height.high", maxIslandHeight);
+		minIslandSize = getConfig().getInt("island.size.min", 70);
+		getConfig().set("island.size.min", minIslandSize);
+		maxIslandSize = getConfig().getInt("island.size.max", 180);
+		getConfig().set("island.size.max", maxIslandSize);
 		rarityModifiers = new double[14];
 		rarityModifiers[0] = getConfig().getDouble("rarity.coalore", 1);
 		getConfig().set("rarity.coalore", rarityModifiers[0]);
@@ -132,6 +153,15 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		obsidianPillars = getConfig().getBoolean("features.obsidiantowers", true);
 		getConfig().set("features.obsidiantowers", obsidianPillars);
 		
+		maxDungeonSize = getConfig().getInt("dungeon.maxrooms", 0);
+		getConfig().set("dungeon.maxrooms", maxDungeonSize);
+		dungeonMinChests = getConfig().getInt("dungeon.chests.min", 2);
+		getConfig().set("dungeon.chests.min", dungeonMinChests);
+		dungeonMaxChests = getConfig().getInt("dungeon.chests.max", 3);
+		getConfig().set("dungeon.chests.max", dungeonMaxChests);
+		dungeonExtraDoorChance = getConfig().getDouble("dungeon.extradoorchance", 0.75);
+		getConfig().set("dungeon.extradoorchance", dungeonExtraDoorChance);
+		
 		taskRepeatTimer = getConfig().getInt("minutes_between_update_checks", 15);
 		getConfig().set("minutes_between_update_checks", taskRepeatTimer);
 		
@@ -146,7 +176,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		{
 			try
 			{
-				UpdateChecker c = new UpdateChecker(this, getDescription().getVersion(), "http://dev.bukkit.org/bukkit-plugins/floating-island-world-generation/files.rss");
+				UpdateChecker c = new UpdateChecker(this, getDescription().getVersion());
 				taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, c, 0, 20*60*taskRepeatTimer);
 			}
 			catch (MalformedURLException e)
@@ -159,7 +189,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		try
 		{
 			Metrics m = new Metrics(this);
-			Graph g = m.createGraph("Island Chances");
+			/*Graph g = m.createGraph("Island Chances");
 			g.addPlotter(new Plotter("Plains"){
 				public int getValue()
 				{
@@ -250,7 +280,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					return 1;
 				}
 			});
-			m.addGraph(g);
+			m.addGraph(g);*/
 			m.start();
 		}
 		catch (IOException e)
@@ -282,7 +312,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					if(s.valid) IslePopulator.schematics.add(s);
 					else throw new Exception("File invalid!");
 				}
-				catch (Exception e)
+				catch(Exception e)
 				{
 					getLogger().warning("Invalid house NBT file: "+f.getName());
 					getLogger().warning(e.getMessage());
@@ -346,7 +376,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					}
 					catch (InvalidConfigurationException e)
 					{
-						getLogger().warning("Invalid ore YML file: "+f.getName());
+						getLogger().warning("Invalid ore YAML file: "+f.getName());
 					}
 				}
 			}
@@ -387,7 +417,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 			{
 				if(args[0].equalsIgnoreCase("data"))
 				{
-					sender.sendMessage("[IsleWorldGen] Island starting height: "+islandStartY);
+					sender.sendMessage("[IsleWorldGen] Island height range: "+minIslandHeight+"-"+maxIslandHeight);
 					sender.sendMessage("[IsleWorldGen] Island spacing: "+islandSpacing);
 					sender.sendMessage("[IsleWorldGen] Minutes between update checks: "+((taskRepeatTimer>0)?taskRepeatTimer:"Disabled"));
 					sender.sendMessage("[IsleWorldGen] Type \"/islegen chancemod\" for rarity modifiers.");
