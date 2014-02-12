@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Material;
 import org.bukkit.WorldCreator;
@@ -33,12 +35,14 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	public static double dungeonChance, grassChance, flowerChance,
 						 islandHeightScalar, islandUnderbellyScalar,
 						 dungeonExtraDoorChance;
-	public static boolean coverSnowWithGrass;
+	public static boolean coverSnowWithGrass,
+						  pigZombieSpawners,
+						  endPortals, netherPortals,
+						  obsidianPillars,
+						  randomSpawnPoint;
 	
 	public static int waterLevel = 0, waterBlock = 0; //TODO: improve
 	
-	
-	public static boolean pigZombieSpawners, endPortals, netherPortals, obsidianPillars;
 	
 	public static boolean enabled;
 	
@@ -162,6 +166,9 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		dungeonExtraDoorChance = getConfig().getDouble("dungeon.extradoorchance", 0.75);
 		getConfig().set("dungeon.extradoorchance", dungeonExtraDoorChance);
 		
+		randomSpawnPoint = getConfig().getBoolean("random_spawn_point", false);
+		getConfig().set("random_spawn_point", randomSpawnPoint);
+		
 		taskRepeatTimer = getConfig().getInt("minutes_between_update_checks", 15);
 		getConfig().set("minutes_between_update_checks", taskRepeatTimer);
 		
@@ -171,6 +178,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		
 		loadOres();
 		loadStructures();
+		loadDungeonChests();
 		
 		if(taskRepeatTimer > 0)
 		{
@@ -374,14 +382,14 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 						if(debug) getLogger().info("  Ore Chance: "+chance);
 						oreList.add(new PlacableOre(oreID, oreData, veinMinSize, veinMaxSize, canReplace, chance));
 					}
-					catch (InvalidConfigurationException e)
+					catch(InvalidConfigurationException e)
 					{
 						getLogger().warning("Invalid ore YAML file: "+f.getName());
 					}
 				}
 			}
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			e.printStackTrace();
 		}
@@ -391,6 +399,120 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		{
 			IslePopulator.placableOres[a] = oreList.get(a);
 		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	private void loadDungeonChests()
+	{
+		ArrayList<DungeonLootChest> chests = new ArrayList<DungeonLootChest>();
+		try
+		{
+			YamlConfiguration y;
+			File f = new File(getDataFolder().getAbsolutePath()+File.separator+"chests");
+			System.out.println(f.getAbsolutePath());
+			File[] files = f.listFiles();
+			if(files != null)
+			{
+				for(int a = 0; a < files.length; a++)
+				{
+					y = new YamlConfiguration();
+					try
+					{
+						y.load(files[a]);
+						DungeonLootChest chest = new DungeonLootChest();
+						chest.chestName = y.getString("name");
+						if(chest.chestName != null && chest.chestName.length() > 0) chest.useChestName = true;
+						chest.allowSameEntry = y.getBoolean("reuse_groups", true);
+						chest.weight = y.getInt("weight", 0);
+						if(chest.weight <= 0) continue;
+						chest.minItems = y.getInt("min_items", 0);
+						chest.maxItems = y.getInt("max_items", chest.minItems);
+						//TODO: read data
+						chest.itemGroups = new ArrayList<DungeonLootItemGroup>();
+						List<Map<?,?>> list = y.getMapList("item_groups");
+						for(Map<?,?> itemGroup : list)
+						{
+							ArrayList<DungeonLootItem> itemArray = new ArrayList<DungeonLootItem>();
+							int weight = 0;
+							Object o = itemGroup.get("items");
+							if(o instanceof ArrayList<?>)
+							{
+								@SuppressWarnings("unchecked")
+								ArrayList<Map<String, Object>> itemList = (ArrayList<Map<String, Object>>)itemGroup.get("items");
+								for(Map<String, Object> itemInList : itemList)
+								{
+									int weight2 = 0, id = 0, dmg = 0, min = 0, max = 0;
+									o = itemInList.get("weight");
+									if(o instanceof Integer) weight2 = (Integer)o;
+									o = itemInList.get("id");
+									if(o instanceof Integer) id = (Integer)o;
+									else if(o instanceof String) id = getMaterialID((String)o);
+									o = itemInList.get("dmg");
+									if(o instanceof Integer) dmg = (Integer)o;
+									o = itemInList.get("minstack");
+									if(o instanceof Integer) min = (Integer)o;
+									o = itemInList.get("maxstack");
+									if(o instanceof Integer) max = (Integer)o;
+									else max = min;
+									if(weight2 > 0 && id != 0 && min > 0 && max >= min)
+									{
+										itemArray.add(new DungeonLootItem(id, dmg, min, max, weight2));
+									}
+								}
+							}
+							o = itemGroup.get("weight");
+							if(o instanceof Integer) weight = (Integer)o;
+							if(weight > 0 && itemArray.size() > 0)
+							{
+								chest.itemGroups.add(new DungeonLootItemGroup(itemArray, weight));
+								chest.groupTotalWeight += weight;
+							}
+						}
+						if(chest.groupTotalWeight > 0)
+						{
+							chests.add(chest);
+							IslePopulator.dungeonChestWeightSum += chest.weight;
+						}
+					}
+					catch(InvalidConfigurationException e)
+					{
+						getLogger().warning("Invalid ore YAML file: "+f.getName());
+					}
+				}
+			}
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		if(IslePopulator.dungeonChestWeightSum <= 0)
+		{
+			DungeonLootChest chest = new DungeonLootChest();
+			chest.useChestName = false;
+			chest.weight = 1;
+			chest.allowSameEntry = true;
+			chest.minItems = 2;
+			chest.maxItems = 9;
+			chest.itemGroups = new ArrayList<DungeonLootItemGroup>();
+			ArrayList<DungeonLootItem> items = new ArrayList<DungeonLootItem>();
+			items.add(new DungeonLootItem(Material.MELON_SEEDS.getId(), 0, 5, 20, 70));
+			items.add(new DungeonLootItem(Material.PUMPKIN_SEEDS.getId(), 0, 5, 20, 70));
+			items.add(new DungeonLootItem(Material.SUGAR_CANE.getId(), 0, 5, 20, 70));
+			items.add(new DungeonLootItem(Material.REDSTONE.getId(), 0, 2, 8, 200));
+			items.add(new DungeonLootItem(Material.IRON_INGOT.getId(), 0, 2, 4, 150));
+			items.add(new DungeonLootItem(Material.SADDLE.getId(), 0, 1, 1, 100));
+			items.add(new DungeonLootItem(Material.GOLD_INGOT.getId(), 0, 1, 3, 100));
+			items.add(new DungeonLootItem(Material.BLAZE_ROD.getId(), 0, 2, 8, 50));
+			items.add(new DungeonLootItem(Material.ENDER_PEARL.getId(), 0, 1, 2, 50));
+			items.add(new DungeonLootItem(Material.DIAMOND.getId(), 0, 1, 2, 50));
+			items.add(new DungeonLootItem(Material.SLIME_BALL.getId(), 0, 1, 10, 50));
+			items.add(new DungeonLootItem(Material.ENCHANTED_BOOK.getId(), 10, 1, 1, 10));
+			chest.itemGroups.add(new DungeonLootItemGroup(items, 1));
+			chest.groupTotalWeight = 1;
+			chests.add(chest);
+			IslePopulator.dungeonChestWeightSum = 1;
+		}
+		IslePopulator.dungeonChests = chests.toArray(new DungeonLootChest[0]);
 	}
 	
 	@Override
