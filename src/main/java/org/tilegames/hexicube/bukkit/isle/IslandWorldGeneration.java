@@ -11,7 +11,6 @@ import org.bukkit.Material;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -113,7 +112,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
 		getConfig().set("dungeonchance", dungeonChance);
 		
-		islandChances = new int[10];
+		islandChances = new int[11];
 		islandChances[0] = getConfig().getInt("islandchance.plains", 4);
 		getConfig().set("islandchance.plains", islandChances[0]);
 		islandChances[1] = getConfig().getInt("islandchance.forest", 8);
@@ -134,6 +133,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		getConfig().set("islandchance.mushroom", islandChances[8]);
 		islandChances[9] = getConfig().getInt("islandchance.lake", 4);
 		getConfig().set("islandchance.lake", islandChances[9]);
+		islandChances[10] = getConfig().getInt("islandchance.none", 6);
+		getConfig().set("islandchance.none", islandChances[10]);
 		islandTotalChance = 0;
 		for(int a = 0; a < islandChances.length; a++)
 		{
@@ -586,6 +587,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 						if(islandChances[7] > 0) sender.sendMessage("[IsleWorldGen]   Ender: "+islandChances[7]+" ("+(double)Math.round((double)islandChances[7]*10000/islandTotalChance)/100+"%)");
 						if(islandChances[8] > 0) sender.sendMessage("[IsleWorldGen]   Mushroom: "+islandChances[8]+" ("+(double)Math.round((double)islandChances[8]*10000/islandTotalChance)/100+"%)");
 						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   Ocean: "+islandChances[9]+" ("+(double)Math.round((double)islandChances[9]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   None: "+islandChances[10]+" ("+(double)Math.round((double)islandChances[10]*10000/islandTotalChance)/100+"%)");
 					}
 				}
 				else if(args[0].equalsIgnoreCase("checkver") && sender.isOp())
@@ -613,6 +615,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 
 	public void tellOps(String string)
 	{
+		@SuppressWarnings("deprecation")
 		Player[] players = getServer().getOnlinePlayers();
 		for(int a = 0; a < players.length; a++)
 		{

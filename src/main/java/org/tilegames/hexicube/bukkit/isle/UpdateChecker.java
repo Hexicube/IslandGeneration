@@ -6,11 +6,10 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-
-import net.minecraft.util.org.apache.commons.lang3.StringEscapeUtils;
 
 public class UpdateChecker implements Runnable
 {
