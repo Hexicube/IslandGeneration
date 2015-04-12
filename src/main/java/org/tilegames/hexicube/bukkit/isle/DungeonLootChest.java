@@ -7,7 +7,7 @@ public class DungeonLootChest
 	public String chestName;
 	public boolean useChestName;
 	
-	public boolean allowSameEntry;
+	public boolean allowSameEntry, largeDungeonOnly;
 	public int weight, minItems, maxItems, groupTotalWeight;
 	public ArrayList<DungeonLootItemGroup> itemGroups;
 }

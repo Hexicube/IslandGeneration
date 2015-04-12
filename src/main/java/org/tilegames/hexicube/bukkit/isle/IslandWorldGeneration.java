@@ -29,11 +29,15 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 					  maxDungeonSize, dungeonMinChests,
 					  dungeonMaxChests, minIslandSize,
 					  maxIslandSize;
+	
 	public static double[] rarityModifiers;
+	
 	public static int[] islandChances;
+	
 	public static double dungeonChance, grassChance, flowerChance,
 						 islandHeightScalar, islandUnderbellyScalar,
-						 dungeonExtraDoorChance;
+						 dungeonExtraDoorChance, regularDungeonChance;
+	
 	public static boolean coverSnowWithGrass,
 						  pigZombieSpawners,
 						  endPortals, netherPortals,
@@ -109,8 +113,12 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 		rarityModifiers[13] = getConfig().getDouble("rarity.lapisore", 1);
 		getConfig().set("rarity.lapisore", rarityModifiers[13]);
 		
-		dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
-		getConfig().set("dungeonchance", dungeonChance);
+		if(getConfig().isDouble("dungeonchance"))
+			dungeonChance = getConfig().getDouble("dungeonchance");
+		else dungeonChance = getConfig().getDouble("dungeonchance", 0.02);
+		getConfig().set("dungeonchance.linked", dungeonChance);
+		regularDungeonChance = getConfig().getDouble("dungeonchance.regular", 0.15);
+		getConfig().set("dungeonchance.regular", regularDungeonChance);
 		
 		islandChances = new int[11];
 		islandChances[0] = getConfig().getInt("islandchance.plains", 4);
@@ -406,6 +414,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 	private void loadDungeonChests()
 	{
 		ArrayList<DungeonLootChest> chests = new ArrayList<DungeonLootChest>();
+		ArrayList<DungeonLootChest> chests2 = new ArrayList<DungeonLootChest>();
 		try
 		{
 			YamlConfiguration y;
@@ -424,11 +433,11 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 						chest.chestName = y.getString("name");
 						if(chest.chestName != null && chest.chestName.length() > 0) chest.useChestName = true;
 						chest.allowSameEntry = y.getBoolean("reuse_groups", true);
+						chest.largeDungeonOnly = y.getBoolean("only_spawn_in_super_dungeon", false);
 						chest.weight = y.getInt("weight", 0);
 						if(chest.weight <= 0) continue;
 						chest.minItems = y.getInt("min_items", 0);
 						chest.maxItems = y.getInt("max_items", chest.minItems);
-						//TODO: read data
 						chest.itemGroups = new ArrayList<DungeonLootItemGroup>();
 						List<Map<?,?>> list = y.getMapList("item_groups");
 						for(Map<?,?> itemGroup : list)
@@ -473,6 +482,11 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 						{
 							chests.add(chest);
 							IslePopulator.dungeonChestWeightSum += chest.weight;
+							if(!chest.largeDungeonOnly)
+							{
+								chests2.add(chest);
+								IslePopulator.dungeonChestWeightSum2 += chest.weight;
+							}
 						}
 					}
 					catch(InvalidConfigurationException e)
@@ -513,7 +527,35 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 			chests.add(chest);
 			IslePopulator.dungeonChestWeightSum = 1;
 		}
+		if(IslePopulator.dungeonChestWeightSum2 <= 0)
+		{
+			DungeonLootChest chest = new DungeonLootChest();
+			chest.useChestName = false;
+			chest.weight = 1;
+			chest.allowSameEntry = true;
+			chest.minItems = 2;
+			chest.maxItems = 9;
+			chest.itemGroups = new ArrayList<DungeonLootItemGroup>();
+			ArrayList<DungeonLootItem> items = new ArrayList<DungeonLootItem>();
+			items.add(new DungeonLootItem(Material.MELON_SEEDS.getId(), 0, 5, 20, 70));
+			items.add(new DungeonLootItem(Material.PUMPKIN_SEEDS.getId(), 0, 5, 20, 70));
+			items.add(new DungeonLootItem(Material.SUGAR_CANE.getId(), 0, 5, 20, 70));
+			items.add(new DungeonLootItem(Material.REDSTONE.getId(), 0, 2, 8, 200));
+			items.add(new DungeonLootItem(Material.IRON_INGOT.getId(), 0, 2, 4, 150));
+			items.add(new DungeonLootItem(Material.SADDLE.getId(), 0, 1, 1, 100));
+			items.add(new DungeonLootItem(Material.GOLD_INGOT.getId(), 0, 1, 3, 100));
+			items.add(new DungeonLootItem(Material.BLAZE_ROD.getId(), 0, 2, 8, 50));
+			items.add(new DungeonLootItem(Material.ENDER_PEARL.getId(), 0, 1, 2, 50));
+			items.add(new DungeonLootItem(Material.DIAMOND.getId(), 0, 1, 2, 50));
+			items.add(new DungeonLootItem(Material.SLIME_BALL.getId(), 0, 1, 10, 50));
+			items.add(new DungeonLootItem(Material.ENCHANTED_BOOK.getId(), 10, 1, 1, 10));
+			chest.itemGroups.add(new DungeonLootItemGroup(items, 1));
+			chest.groupTotalWeight = 1;
+			chests2.add(chest);
+			IslePopulator.dungeonChestWeightSum2 = 1;
+		}
 		IslePopulator.dungeonChests = chests.toArray(new DungeonLootChest[0]);
+		IslePopulator.dungeonChests2 = chests2.toArray(new DungeonLootChest[0]);
 	}
 	
 	@Override
@@ -587,7 +629,7 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 						if(islandChances[7] > 0) sender.sendMessage("[IsleWorldGen]   Ender: "+islandChances[7]+" ("+(double)Math.round((double)islandChances[7]*10000/islandTotalChance)/100+"%)");
 						if(islandChances[8] > 0) sender.sendMessage("[IsleWorldGen]   Mushroom: "+islandChances[8]+" ("+(double)Math.round((double)islandChances[8]*10000/islandTotalChance)/100+"%)");
 						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   Ocean: "+islandChances[9]+" ("+(double)Math.round((double)islandChances[9]*10000/islandTotalChance)/100+"%)");
-						if(islandChances[9] > 0) sender.sendMessage("[IsleWorldGen]   None: "+islandChances[10]+" ("+(double)Math.round((double)islandChances[10]*10000/islandTotalChance)/100+"%)");
+						if(islandChances[10] > 0) sender.sendMessage("[IsleWorldGen]   None: "+islandChances[10]+" ("+(double)Math.round((double)islandChances[10]*10000/islandTotalChance)/100+"%)");
 					}
 				}
 				else if(args[0].equalsIgnoreCase("checkver") && sender.isOp())

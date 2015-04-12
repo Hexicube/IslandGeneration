@@ -42,6 +42,9 @@ public class IslePopulator extends BlockPopulator
 	
 	public static int dungeonChestWeightSum;
 	public static DungeonLootChest[] dungeonChests;
+
+	public static int dungeonChestWeightSum2;
+	public static DungeonLootChest[] dungeonChests2;
 	
 	@SuppressWarnings("unchecked")
 	private void sendChunkToClient(Chunk chunk, Player player)
@@ -1224,7 +1227,7 @@ public class IslePopulator extends BlockPopulator
 	}
 	
 	@SuppressWarnings("deprecation")
-	private void generateLinkedDungeons(World world, int x, int y, int z, int count, Random rand)
+	private void generateLinkedDungeons(World world, int x, int y, int z, int count, Random rand, boolean linked)
 	{
 		int placedRooms = 0;
 		ArrayList<int[]> positions = new ArrayList<int[]>();
@@ -1314,7 +1317,7 @@ public class IslePopulator extends BlockPopulator
 					for(int yPos = position[1]; yPos <= position[1]+5; yPos++)
 					{
 						if(xPos == position[0]-4 || xPos == position[0]+4 ||
-						   yPos == position[1] || yPos == position[1]+5 ||
+						   yPos == position[1] || (yPos == position[1]+5 && linked) ||
 						   zPos == position[2]-4 || zPos == position[2]+4)
 						{
 							setAirIfAllowed(world, xPos, yPos, zPos, true);
@@ -1403,7 +1406,7 @@ public class IslePopulator extends BlockPopulator
 			int chestCount = IslandWorldGeneration.dungeonMinChests+rand.nextInt(IslandWorldGeneration.dungeonMaxChests-IslandWorldGeneration.dungeonMinChests+1);
 			for(int a = 0; a < chestCount; a++)
 			{
-				int wallID = rand.nextInt(5);
+				int wallID = rand.nextInt(linked?5:4);
 				int chestX, chestY, chestZ, chestData;
 				if(wallID == 0)
 				{
@@ -1445,7 +1448,7 @@ public class IslePopulator extends BlockPopulator
 				{
 					setAirIfAllowed(world, chestX, chestY, chestZ, true);
 					setBlockIfAlreadyAirWithData(world, chestX, chestY, chestZ, Material.CHEST.getId(), chestData);
-					populateChest(world, chestX, chestY, chestZ, rand);
+					populateChest(world, chestX, chestY, chestZ, rand, linked);
 				}
 			}
 			positions.add(new int[]{position[0], position[1]+5, position[2], 0});
@@ -1455,11 +1458,12 @@ public class IslePopulator extends BlockPopulator
 			positions.add(new int[]{position[0], position[1], position[2]+8, 4});
 			positions.add(new int[]{position[0], position[1], position[2]-8, 5});
 		}
-		System.out.println("Placed a "+placedRooms+"-room dungeon centred at: "+x+"/"+y+"/"+z);
+		if(linked) System.out.println("Placed a "+placedRooms+"-room dungeon centred at: "+x+"/"+y+"/"+z);
+		else System.out.println("Placed a dungeon at: "+x+"/"+y+"/"+z);
 	}
 	
 	@SuppressWarnings({"deprecation", "unchecked"})
-	private void populateChest(World world, int x, int y, int z, Random rand)
+	private void populateChest(World world, int x, int y, int z, Random rand, boolean linked)
 	{
 		TileEntity t = ((CraftWorld)world).getTileEntityAt(x, y, z);
 		if(!(t instanceof TileEntityChest))
@@ -1468,13 +1472,26 @@ public class IslePopulator extends BlockPopulator
 			return;
 		}
 		TileEntityChest c = (TileEntityChest)t;
-		int val = rand.nextInt(dungeonChestWeightSum);
 		DungeonLootChest loot = null;
-		for(int a = 0; a < dungeonChests.length; a++)
+		if(linked)
 		{
-			loot = dungeonChests[a];
-			if(val < loot.weight) break;
-			val -= loot.weight;
+			int val = rand.nextInt(dungeonChestWeightSum);
+			for(int a = 0; a < dungeonChests.length; a++)
+			{
+				loot = dungeonChests[a];
+				if(val < loot.weight) break;
+				val -= loot.weight;
+			}
+		}
+		else
+		{
+			int val = rand.nextInt(dungeonChestWeightSum2);
+			for(int a = 0; a < dungeonChests2.length; a++)
+			{
+				loot = dungeonChests2[a];
+				if(val < loot.weight) break;
+				val -= loot.weight;
+			}
 		}
 		if(loot == null)
 		{
@@ -1488,7 +1505,7 @@ public class IslePopulator extends BlockPopulator
 		for(int a = 0; a < numItems; a++)
 		{
 			if(allowedItems.size() == 0) break;
-			val = rand.nextInt(maxWeight);
+			int val = rand.nextInt(maxWeight);
 			DungeonLootItemGroup group = null;
 			for(int b = 0; b < allowedItems.size(); b++)
 			{
@@ -1737,7 +1754,7 @@ public class IslePopulator extends BlockPopulator
 										}
 									}
 								}
-								else if(distFromTop == 0 && rand.nextInt(50) == 15)
+								else if(IslandWorldGeneration.pigZombieSpawners && distFromTop == 0 && rand.nextInt(50) == 15)
 								{
 									setBlock(world, blockX, blockY, blockZ, Material.MOB_SPAWNER.getId());
 									TileEntityMobSpawner t = new TileEntityMobSpawner();
@@ -2086,7 +2103,11 @@ public class IslePopulator extends BlockPopulator
 			{
 				int maxRooms = (5+rand.nextInt(21))*size*size/10000;
 				if(IslandWorldGeneration.maxDungeonSize > 0) maxRooms = Math.min(maxRooms, IslandWorldGeneration.maxDungeonSize);
-				generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, maxRooms, rand);
+				generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, maxRooms, rand, true);
+			}
+			else if(rand.nextDouble() < IslandWorldGeneration.regularDungeonChance)
+			{
+				generateLinkedDungeons(world, startX+size/2, startY, startZ+size/2, 1, rand, false);
 			}
 		}
 		if(flatIsland && islandType == Biome.PLAINS && rand.nextInt(3) == 1)
