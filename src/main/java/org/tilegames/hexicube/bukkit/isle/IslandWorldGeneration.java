@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -657,8 +658,8 @@ public final class IslandWorldGeneration extends JavaPlugin implements Listener
 
 	public void tellOps(String string)
 	{
-		@SuppressWarnings("deprecation")
-		Player[] players = getServer().getOnlinePlayers();
+		Collection<? extends Player> tmp = getServer().getOnlinePlayers();
+		Player[] players = tmp.toArray(new Player[tmp.size()]);
 		for(int a = 0; a < players.length; a++)
 		{
 			if(players[a].isOp()) players[a].sendMessage(string);
