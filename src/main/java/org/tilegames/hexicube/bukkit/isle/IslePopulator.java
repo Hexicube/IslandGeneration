@@ -6,14 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.server.v1_8_R1.Block;
-import net.minecraft.server.v1_8_R1.BlockPosition;
-import net.minecraft.server.v1_8_R1.ChunkCoordIntPair;
-import net.minecraft.server.v1_8_R1.ChunkSection;
-import net.minecraft.server.v1_8_R1.NBTTagCompound;
-import net.minecraft.server.v1_8_R1.TileEntity;
-import net.minecraft.server.v1_8_R1.TileEntityChest;
-import net.minecraft.server.v1_8_R1.TileEntityMobSpawner;
+import net.minecraft.server.v1_8_R3.Block;
+import net.minecraft.server.v1_8_R3.BlockPosition;
+import net.minecraft.server.v1_8_R3.ChunkCoordIntPair;
+import net.minecraft.server.v1_8_R3.ChunkSection;
+import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.minecraft.server.v1_8_R3.TileEntity;
+import net.minecraft.server.v1_8_R3.TileEntityChest;
+import net.minecraft.server.v1_8_R3.TileEntityMobSpawner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -21,10 +21,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.craftbukkit.v1_8_R1.CraftChunk;
-import org.bukkit.craftbukkit.v1_8_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_8_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_8_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_8_R3.CraftChunk;
+import org.bukkit.craftbukkit.v1_8_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.BlockPopulator;
@@ -33,7 +33,7 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
 public class IslePopulator extends BlockPopulator
 {
-	private ArrayList<net.minecraft.server.v1_8_R1.Chunk> chunksToReload;
+	private ArrayList<net.minecraft.server.v1_8_R3.Chunk> chunksToReload;
 	private UsedSections lastUsedSections;
 	
 	public static ArrayList<Schematic> schematics;
@@ -46,7 +46,6 @@ public class IslePopulator extends BlockPopulator
 	public static int dungeonChestWeightSum2;
 	public static DungeonLootChest[] dungeonChests2;
 	
-	@SuppressWarnings("unchecked")
 	private void sendChunkToClient(Chunk chunk, Player player)
 	{
 		ChunkCoordIntPair ccip = new ChunkCoordIntPair(chunk.getX(), chunk.getZ());
@@ -216,7 +215,7 @@ public class IslePopulator extends BlockPopulator
 		   lastUsedSections.chunkZ == z>>4) usedSections = lastUsedSections;
 		if(usedSections == null)
 		{
-			net.minecraft.server.v1_8_R1.Chunk chunk = ((CraftChunk)c).getHandle();
+			net.minecraft.server.v1_8_R3.Chunk chunk = ((CraftChunk)c).getHandle();
 			chunksToReload.add(chunk);
 			Field f = null;
 			try
@@ -1559,7 +1558,7 @@ public class IslePopulator extends BlockPopulator
 	{
 		if((chunk.getX()%(IslandWorldGeneration.islandSpacing*2) != 0 || chunk.getZ()%(IslandWorldGeneration.islandSpacing*2) != 0) &&
 		   (Math.abs(chunk.getX())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing || Math.abs(chunk.getZ())%(IslandWorldGeneration.islandSpacing*2) != IslandWorldGeneration.islandSpacing)) return;
-		chunksToReload = new ArrayList<net.minecraft.server.v1_8_R1.Chunk>();
+		chunksToReload = new ArrayList<net.minecraft.server.v1_8_R3.Chunk>();
 		boolean sandEdges = rand.nextInt(10) < 3;
 		boolean flatIsland = rand.nextInt(17) < 5;
 		boolean islandValidSpawn = false;
@@ -2116,7 +2115,7 @@ public class IslePopulator extends BlockPopulator
 		}
 		while(chunksToReload.size() > 0)
 		{
-			net.minecraft.server.v1_8_R1.Chunk c = chunksToReload.remove(0);
+			net.minecraft.server.v1_8_R3.Chunk c = chunksToReload.remove(0);
 			c.initLighting();
 			Iterator<Player> players = world.getPlayers().iterator();
 			while(players.hasNext())
